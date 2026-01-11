@@ -48,10 +48,7 @@ const App: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(getTodayISO());
   
   const [appData, setAppDataState] = useState<AppState>(INITIAL_STATE);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
-    return window.localStorage.getItem('focus-authenticated') === 'true';
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [loginName, setLoginName] = useState('');
 
   useEffect(() => {
@@ -90,12 +87,24 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    const storedAuth = window.localStorage.getItem('focus-authenticated');
+    if (storedAuth === 'true') {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
     window.localStorage.setItem('focus-authenticated', isAuthenticated ? 'true' : 'false');
   }, [isAuthenticated]);
 
   useEffect(() => {
-    setLoginName(appData.settings.username || '');
-  }, [appData.settings.username]);
+    if (!isDataLoaded) return;
+    const nextName = appData.settings.username || '';
+    if (nextName !== loginName) {
+      setLoginName(nextName);
+    }
+  }, [appData.settings.username, isDataLoaded, loginName]);
 
   const setAppData = useCallback((updater: (prev: AppState) => AppState) => {
     setAppDataState(prev => {
@@ -181,12 +190,11 @@ const App: React.FC = () => {
 
   const handleLogin = useCallback(() => {
     const cleanedName = loginName.trim();
-    if (cleanedName) {
-      setAppData(prev => ({
-        ...prev,
-        settings: { ...prev.settings, username: cleanedName }
-      }));
-    }
+    if (!cleanedName) return;
+    setAppData(prev => ({
+      ...prev,
+      settings: { ...prev.settings, username: cleanedName }
+    }));
     setIsAuthenticated(true);
   }, [loginName, setAppData]);
 
