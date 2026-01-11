@@ -101,10 +101,8 @@ const App: React.FC = () => {
   useEffect(() => {
     if (!isDataLoaded) return;
     const nextName = appData.settings.username || '';
-    if (nextName !== loginName) {
-      setLoginName(nextName);
-    }
-  }, [appData.settings.username, isDataLoaded, loginName]);
+    setLoginName(prev => (prev === nextName ? prev : nextName));
+  }, [appData.settings.username, isDataLoaded]);
 
   const setAppData = useCallback((updater: (prev: AppState) => AppState) => {
     setAppDataState(prev => {
@@ -197,6 +195,15 @@ const App: React.FC = () => {
     }));
     setIsAuthenticated(true);
   }, [loginName, setAppData]);
+
+  const handleGuestLogin = useCallback(() => {
+    setAppData(prev => {
+      const currentName = prev.settings.username?.trim();
+      if (currentName) return prev;
+      return { ...prev, settings: { ...prev.settings, username: 'Convidado' } };
+    });
+    setIsAuthenticated(true);
+  }, [setAppData]);
 
   useEffect(() => {
     if (isDataLoaded) {
@@ -576,12 +583,13 @@ const App: React.FC = () => {
             </div>
             <button
               onClick={handleLogin}
-              className="w-full bg-indigo-600 text-white font-black py-3 rounded-xl uppercase tracking-[0.2em] hover:opacity-90 transition"
+              disabled={!loginName.trim()}
+              className={`w-full bg-indigo-600 text-white font-black py-3 rounded-xl uppercase tracking-[0.2em] transition ${!loginName.trim() ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'}`}
             >
               Entrar
             </button>
             <button
-              onClick={() => setIsAuthenticated(true)}
+              onClick={handleGuestLogin}
               className={`w-full py-3 rounded-xl font-black uppercase tracking-[0.2em] border transition ${isLight ? 'border-zinc-200 text-zinc-600 hover:bg-zinc-100' : 'border-zinc-800 text-zinc-400 hover:bg-zinc-900'}`}
             >
               Continuar como convidado
