@@ -1,5 +1,5 @@
 
-export type Tab = 'dashboard' | 'focus' | 'resumo' | 'weekly' | 'stats' | 'questoes' | 'calendario' | 'conquistas' | 'settings' | 'share' | 'ajuda' | 'provas' | 'subjects_manage';
+export type Tab = 'dashboard' | 'focus' | 'resumo' | 'weekly' | 'stats' | 'questoes' | 'calendario' | 'conquistas' | 'settings' | 'share' | 'ajuda' | 'provas' | 'subjects_manage' | 'revisao';
 
 export type Language = 'pt-BR' | 'en-US' | 'es-ES' | 'ru-RU';
 
@@ -25,6 +25,15 @@ export interface QuestionData {
   incorrect: number;
 }
 
+export interface ReviewItem {
+  id: number;
+  date: string;
+  subject: string;
+  topic?: string;
+  notes?: string;
+  completed: boolean;
+}
+
 export interface UserSettings {
   theme: 'dark' | 'light';
   username: string;
@@ -41,6 +50,7 @@ export interface AppState {
   goals: Record<string, number>; // hours per week
   questions: Record<string, QuestionData>; // subject -> {correct, incorrect}
   questionLogs: QuestionLog[];
+  reviews: ReviewItem[]; // items marked for review
   unlockedAchievements?: string[]; // IDs of action-based achievements
   viewedAchievements?: string[]; // IDs of achievements the user has already clicked/seen
   selectedAchievementId?: string; // ID of the achievement to highlight in sidebar

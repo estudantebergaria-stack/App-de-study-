@@ -1,6 +1,6 @@
 
 import React, { useMemo } from 'react';
-import { Layout, Zap, Target, BarChart2, Download, CheckSquare, Calendar, Trophy, Settings, Camera, HelpCircle, BookOpen, ClipboardList, Star, Pin } from 'lucide-react';
+import { Layout, Zap, Target, BarChart2, Download, CheckSquare, Calendar, Trophy, Settings, Camera, HelpCircle, BookOpen, ClipboardList, Star, Pin, RefreshCcw } from 'lucide-react';
 import { Tab, UserSettings } from '../types';
 import { ACHIEVEMENTS, Difficulty } from '../constants/achievements';
 
@@ -49,6 +49,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     { id: 'resumo' as Tab, icon: ClipboardList, label: t.summary },
     { id: 'subjects_manage' as Tab, icon: BookOpen, label: t.subjects_manage },
     { id: 'questoes' as Tab, icon: CheckSquare, label: t.questions },
+    { id: 'revisao' as Tab, icon: RefreshCcw, label: t.revisao },
     { id: 'conquistas' as Tab, icon: Trophy, label: t.achievements },
     { id: 'provas' as Tab, icon: Target, label: t.provas },
     { id: 'calendario' as Tab, icon: Calendar, label: t.calendar },
