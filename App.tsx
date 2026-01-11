@@ -48,6 +48,11 @@ const App: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(getTodayISO());
   
   const [appData, setAppDataState] = useState<AppState>(INITIAL_STATE);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return window.localStorage.getItem('focus-authenticated') === 'true';
+  });
+  const [loginName, setLoginName] = useState('');
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -82,6 +87,15 @@ const App: React.FC = () => {
     };
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem('focus-authenticated', isAuthenticated ? 'true' : 'false');
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    setLoginName(appData.settings.username || '');
+  }, [appData.settings.username]);
 
   const setAppData = useCallback((updater: (prev: AppState) => AppState) => {
     setAppDataState(prev => {
@@ -164,6 +178,17 @@ const App: React.FC = () => {
     });
     alert("Histórico de teste gerado com sucesso! Verifique o painel e estatísticas.");
   }, [setAppData]);
+
+  const handleLogin = useCallback(() => {
+    const cleanedName = loginName.trim();
+    if (cleanedName) {
+      setAppData(prev => ({
+        ...prev,
+        settings: { ...prev.settings, username: cleanedName }
+      }));
+    }
+    setIsAuthenticated(true);
+  }, [loginName, setAppData]);
 
   useEffect(() => {
     if (isDataLoaded) {
@@ -514,6 +539,46 @@ const App: React.FC = () => {
         <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center text-white font-black text-3xl shadow-2xl animate-pulse">F</div>
         <div className="flex items-center gap-2 text-zinc-500 font-bold tracking-widest uppercase text-xs">
           <Loader2 className="animate-spin" size={16} /> Carregando Banco de Dados...
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    const isLight = appData.settings.theme === 'light';
+    return (
+      <div className={`h-screen w-full flex items-center justify-center ${isLight ? 'bg-[#f4f4f5] text-zinc-900' : 'bg-[#09090b] text-[#f4f4f5]'}`}>
+        <div className={`w-full max-w-md rounded-2xl border p-8 shadow-2xl ${isLight ? 'bg-white border-zinc-200' : 'bg-zinc-900 border-zinc-800'}`}>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black text-xl">F</div>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Focus</p>
+              <h1 className="text-2xl font-black">{t?.welcome || 'Bem-vindo'}</h1>
+            </div>
+          </div>
+          <div className="space-y-3">
+            <div>
+              <label className={`block text-[10px] font-black uppercase tracking-[0.2em] mb-2 ${isLight ? 'text-zinc-500' : 'text-zinc-400'}`}>{t?.usernameLabel || 'Seu Nome'}</label>
+              <input
+                value={loginName}
+                onChange={(e) => setLoginName(e.target.value)}
+                placeholder={t?.usernamePlaceholder || 'Como quer ser chamado?'}
+                className={`w-full rounded-xl px-3 py-3 bg-transparent border outline-none ${isLight ? 'border-zinc-200 text-zinc-900 placeholder:text-zinc-400 focus:border-indigo-500' : 'border-zinc-800 text-white placeholder:text-zinc-500 focus:border-indigo-500'}`}
+              />
+            </div>
+            <button
+              onClick={handleLogin}
+              className="w-full bg-indigo-600 text-white font-black py-3 rounded-xl uppercase tracking-[0.2em] hover:opacity-90 transition"
+            >
+              Entrar
+            </button>
+            <button
+              onClick={() => setIsAuthenticated(true)}
+              className={`w-full py-3 rounded-xl font-black uppercase tracking-[0.2em] border transition ${isLight ? 'border-zinc-200 text-zinc-600 hover:bg-zinc-100' : 'border-zinc-800 text-zinc-400 hover:bg-zinc-900'}`}
+            >
+              Continuar como convidado
+            </button>
+          </div>
         </div>
       </div>
     );
