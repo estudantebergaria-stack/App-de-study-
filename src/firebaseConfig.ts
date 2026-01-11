@@ -14,7 +14,7 @@ const firebaseConfig = {
 
 // Check if Firebase is properly configured
 const isFirebaseConfigured = (): boolean => {
-  return !!(
+  const hasAllValues = !!(
     firebaseConfig.apiKey &&
     firebaseConfig.authDomain &&
     firebaseConfig.projectId &&
@@ -22,6 +22,14 @@ const isFirebaseConfigured = (): boolean => {
     firebaseConfig.messagingSenderId &&
     firebaseConfig.appId
   );
+  
+  // Check that values are not placeholders
+  const hasValidValues = 
+    firebaseConfig.apiKey !== 'your_api_key_here' &&
+    firebaseConfig.apiKey !== 'test_api_key' &&
+    firebaseConfig.apiKey.length > 10;
+  
+  return hasAllValues && hasValidValues;
 };
 
 // Initialize Firebase only if configured

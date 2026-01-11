@@ -7,6 +7,8 @@ import {
 import { auth } from '../firebaseConfig';
 import { LogIn, UserPlus, Loader2 } from 'lucide-react';
 
+const MIN_PASSWORD_LENGTH = 6;
+
 const LoginPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -34,8 +36,8 @@ const LoginPage: React.FC = () => {
       return;
     }
 
-    if (password.length < 6) {
-      setError('A senha deve ter pelo menos 6 caracteres.');
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      setError(`A senha deve ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`);
       return;
     }
 
