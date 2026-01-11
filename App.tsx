@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Layout, Zap, Target, BarChart2, Download, Menu, X, CheckSquare, Calendar as CalendarIcon, Loader2 } from 'lucide-react';
-import { Tab, AppState, StudyLog, QuestionData, QuestionLog, UserSettings, TimerMode, PomoState } from './types';
+import { Tab, AppState, StudyLog, QuestionData, QuestionLog, UserSettings, TimerMode, PomoState, ReviewItem } from './types';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import FocusTimer from './components/FocusTimer';
@@ -16,6 +16,7 @@ import ShareView from './components/ShareView';
 import HelpView from './components/HelpView';
 import ExamsView from './components/ExamsView';
 import ManageSubjectsView from './components/ManageSubjectsView';
+import ReviewView from './components/ReviewView';
 import { TRANSLATIONS } from './translations';
 import { ACHIEVEMENTS } from './constants/achievements';
 import { getData, saveData } from './services/db';
@@ -35,6 +36,7 @@ const INITIAL_STATE: AppState = {
   goals: { 'Matemática': 0, 'Programação': 0, 'Inglês': 0 },
   questions: { 'Matemática': { correct: 0, incorrect: 0 }, 'Programação': { correct: 0, incorrect: 0 }, 'Inglês': { correct: 0, incorrect: 0 } },
   questionLogs: [],
+  reviews: [],
   unlockedAchievements: [],
   viewedAchievements: [],
   selectedAchievementId: undefined,
@@ -424,7 +426,8 @@ const App: React.FC = () => {
         topics: newTopics,
         goals: newGoals,
         logs: prev.logs.filter(l => l.subject !== name),
-        questionLogs: prev.questionLogs.filter(l => l.subject !== name)
+        questionLogs: prev.questionLogs.filter(l => l.subject !== name),
+        reviews: prev.reviews.filter(r => r.subject !== name)
       };
     });
   };
@@ -480,6 +483,11 @@ const App: React.FC = () => {
         log.subject === oldName ? { ...log, subject: newName } : log
       );
 
+      // 8. Revisões
+      next.reviews = prev.reviews.map(review =>
+        review.subject === oldName ? { ...review, subject: newName } : review
+      );
+
       return next;
     });
   };
@@ -504,9 +512,44 @@ const App: React.FC = () => {
           : log
       );
       
+      // 3. Revisões (atualizar o campo topic)
+      next.reviews = prev.reviews.map(review =>
+        (review.subject === subject && review.topic === oldTopic)
+          ? { ...review, topic: newTopic }
+          : review
+      );
+      
       return next;
     });
   };
+
+  const addReview = useCallback((review: Omit<ReviewItem, 'id' | 'date'>) => {
+    setAppData(prev => ({
+      ...prev,
+      reviews: [...prev.reviews, { 
+        ...review, 
+        id: Date.now(),
+        date: new Date().toISOString() 
+      }]
+    }));
+  }, [setAppData]);
+
+  const toggleReview = useCallback((id: number) => {
+    setAppData(prev => ({
+      ...prev,
+      reviews: prev.reviews.map(review =>
+        review.id === id ? { ...review, completed: !review.completed } : review
+      )
+    }));
+  }, [setAppData]);
+
+  const deleteReview = useCallback((id: number) => {
+    setAppData(prev => ({
+      ...prev,
+      reviews: prev.reviews.filter(review => review.id !== id)
+    }));
+  }, [setAppData]);
+
 
   if (!isDataLoaded) {
     return (
@@ -599,6 +642,7 @@ const App: React.FC = () => {
                questionLogs: [...prev.questionLogs, { id: Date.now(), date: new Date().toISOString(), subject: sub, correct: log.correct, incorrect: log.incorrect }]
              }));
           }} theme={appData.settings.theme} t={t} />}
+          {activeTab === 'revisao' && <ReviewView reviews={appData.reviews} subjects={appData.subjects} topics={appData.topics} subjectColors={appData.subjectColors || {}} onAddReview={addReview} onToggleReview={toggleReview} onDeleteReview={deleteReview} theme={appData.settings.theme} t={t} />}
           {activeTab === 'calendario' && <CalendarView logs={appData.logs} theme={appData.settings.theme} t={t} />}
           {activeTab === 'weekly' && <WeeklyGoals subjects={appData.subjects} logs={appData.logs} goals={appData.goals} onSetGoal={(sub, hrs) => setAppData(prev => ({ ...prev, goals: { ...prev.goals, [sub]: hrs } }))} theme={appData.settings.theme} t={t} />}
           {activeTab === 'stats' && <Stats subjects={appData.subjects} logs={appData.logs} subjectColors={appData.subjectColors || {}} theme={appData.settings.theme} t={t} />}
