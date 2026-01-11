@@ -86,12 +86,12 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (!isDataLoaded || typeof window === 'undefined') return;
     const storedAuth = window.localStorage.getItem('focus-authenticated');
     if (storedAuth === 'true') {
       setIsAuthenticated(true);
     }
-  }, []);
+  }, [isDataLoaded]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -197,13 +197,15 @@ const App: React.FC = () => {
   }, [loginName, setAppData]);
 
   const handleGuestLogin = useCallback(() => {
-    setAppData(prev => {
-      const currentName = prev.settings.username?.trim();
-      if (currentName) return prev;
-      return { ...prev, settings: { ...prev.settings, username: 'Convidado' } };
-    });
+    const fallbackName = loginName.trim();
+    if (fallbackName) {
+      setAppData(prev => ({
+        ...prev,
+        settings: { ...prev.settings, username: fallbackName }
+      }));
+    }
     setIsAuthenticated(true);
-  }, [setAppData]);
+  }, [loginName, setAppData]);
 
   useEffect(() => {
     if (isDataLoaded) {
@@ -573,8 +575,11 @@ const App: React.FC = () => {
           </div>
           <div className="space-y-3">
             <div>
-              <label className={`block text-[10px] font-black uppercase tracking-[0.2em] mb-2 ${isLight ? 'text-zinc-500' : 'text-zinc-400'}`}>{t?.usernameLabel || 'Seu Nome'}</label>
+              <label htmlFor="login-name" className={`block text-[10px] font-black uppercase tracking-[0.2em] mb-2 ${isLight ? 'text-zinc-500' : 'text-zinc-400'}`}>{t?.usernameLabel || 'Seu Nome'}</label>
               <input
+                id="login-name"
+                autoComplete="name"
+                aria-required="true"
                 value={loginName}
                 onChange={(e) => setLoginName(e.target.value)}
                 placeholder={t?.usernamePlaceholder || 'Como quer ser chamado?'}
