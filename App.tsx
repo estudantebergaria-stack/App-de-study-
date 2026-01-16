@@ -64,11 +64,16 @@ const App: React.FC = () => {
   }, [currentDate]);
 
   useEffect(() => {
+    // Remove all theme classes first
+    document.body.classList.remove('light-theme', 'preset-neon-purple', 'preset-neon-blue', 'preset-neon-green', 'preset-neon-pink');
+    
+    // Apply the selected theme class
     if (appData.settings.theme === 'light') {
       document.body.classList.add('light-theme');
-    } else {
-      document.body.classList.remove('light-theme');
+    } else if (appData.settings.theme.startsWith('neon-')) {
+      document.body.classList.add(`preset-${appData.settings.theme}`);
     }
+    // 'dark' theme is the default, no class needed
   }, [appData.settings.theme]);
 
   useEffect(() => {
@@ -715,7 +720,19 @@ const App: React.FC = () => {
           {activeTab === 'weekly' && <WeeklyGoals subjects={appData.subjects} topics={appData.topics} logs={appData.logs} goals={appData.goals} topicGoals={appData.topicGoals || {}} onSetGoal={(sub, hrs) => setAppData(prev => ({ ...prev, goals: { ...prev.goals, [sub]: hrs } }))} onSetTopicGoal={(key, hrs) => setAppData(prev => ({ ...prev, topicGoals: { ...prev.topicGoals, [key]: hrs } }))} theme={appData.settings.theme} t={t} />}
           {activeTab === 'stats' && <Stats subjects={appData.subjects} logs={appData.logs} subjectColors={appData.subjectColors || {}} theme={appData.settings.theme} t={t} />}
           {activeTab === 'subjects_manage' && <ManageSubjectsView subjects={appData.subjects} topics={appData.topics} subjectColors={appData.subjectColors || {}} onAddSubject={addSubject} onDeleteSubject={deleteSubject} onRenameSubject={renameSubject} onSetColor={(s, c) => setAppData(prev => ({ ...prev, subjectColors: { ...prev.subjectColors, [s]: c } }))} onAddTopic={(s, tp) => setAppData(prev => ({ ...prev, topics: { ...prev.topics, [s]: [...(prev.topics[s] || []), tp] } }))} onDeleteTopic={(s, tp) => setAppData(prev => ({ ...prev, topics: { ...prev.topics, [s]: prev.topics[s].filter(t => t !== tp) } }))} onRenameTopic={renameTopic} theme={appData.settings.theme} t={t} />}
-          {activeTab === 'provas' && <ExamsView examDate={appData.examDate} examName={appData.examName} onUpdateExam={(n, d) => setAppData(prev => ({ ...prev, examName: n, examDate: d }))} theme={appData.settings.theme} t={t} />}
+          {activeTab === 'provas' && <ExamsView 
+            examEvents={appData.examEvents || []} 
+            onAddExam={(name, date) => setAppData(prev => ({ 
+              ...prev, 
+              examEvents: [...(prev.examEvents || []), { id: `exam_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, name, date }] 
+            }))} 
+            onRemoveExam={(id) => setAppData(prev => ({ 
+              ...prev, 
+              examEvents: (prev.examEvents || []).filter(e => e.id !== id) 
+            }))} 
+            theme={appData.settings.theme} 
+            t={t} 
+          />}
           {activeTab === 'share' && <ShareView state={appData} theme={appData.settings.theme} t={t} />}
           {activeTab === 'ajuda' && <HelpView theme={appData.settings.theme} t={t} />}
           {activeTab === 'settings' && <Settings settings={appData.settings} onUpdate={(s) => setAppData(prev => ({ ...prev, settings: { ...prev.settings, ...s } }))} theme={appData.settings.theme} appState={appData} onExport={handleExport} onImport={handleImport} onReset={() => setAppData(() => INITIAL_STATE)} onUnlockAll={unlockAllAchievements} onGenerateTestData={generateTestData} t={t} />}
