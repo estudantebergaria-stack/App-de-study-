@@ -2,7 +2,7 @@
 import React, { useMemo, useState } from 'react';
 import { Calendar, Clock, TrendingUp, BookOpen, Target } from 'lucide-react';
 import { ReviewState } from '../types';
-import { parseTopicKey, getLocalDayKey, daysBetween } from '../utils';
+import { parseTopicKey, toLocalISO, daysBetween } from '../utils';
 
 interface ReviewViewProps {
   reviewStates: Record<string, ReviewState>;
@@ -23,21 +23,21 @@ const ReviewView: React.FC<ReviewViewProps> = ({ reviewStates, theme = 'dark', t
   const [sortBy, setSortBy] = useState<'overdue' | 'subject'>('overdue');
   
   const dueTopics = useMemo(() => {
-    const today = getLocalDayKey(new Date());
+    const today = toLocalISO(new Date());
     const topics: DueTopicInfo[] = [];
     
     Object.entries(reviewStates || {}).forEach(([key, state]) => {
-      const dueDate = getLocalDayKey(new Date(state.dueAt));
-      const daysOverdue = daysBetween(dueDate, today);
+      const dueDate = toLocalISO(new Date(state.dueAt));
+      const daysDifference = daysBetween(dueDate, today);
       
-      if (daysOverdue >= 0) {
+      if (daysDifference >= 0) {
         const { subject, topic } = parseTopicKey(key);
         topics.push({
           topicKey: key,
           subject,
           topic,
           reviewState: state,
-          daysOverdue
+          daysOverdue: daysDifference
         });
       }
     });
@@ -56,21 +56,21 @@ const ReviewView: React.FC<ReviewViewProps> = ({ reviewStates, theme = 'dark', t
   }, [reviewStates, sortBy]);
   
   const upcomingTopics = useMemo(() => {
-    const today = getLocalDayKey(new Date());
+    const today = toLocalISO(new Date());
     const topics: DueTopicInfo[] = [];
     
     Object.entries(reviewStates || {}).forEach(([key, state]) => {
-      const dueDate = getLocalDayKey(new Date(state.dueAt));
-      const daysOverdue = daysBetween(dueDate, today);
+      const dueDate = toLocalISO(new Date(state.dueAt));
+      const daysDifference = daysBetween(dueDate, today);
       
-      if (daysOverdue < 0) {
+      if (daysDifference < 0) {
         const { subject, topic } = parseTopicKey(key);
         topics.push({
           topicKey: key,
           subject,
           topic,
           reviewState: state,
-          daysOverdue
+          daysOverdue: daysDifference
         });
       }
     });

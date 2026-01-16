@@ -117,8 +117,8 @@ export const getDifficultyMultiplier = (errorRate: number): number => {
  * Calculates days between two date strings (YYYY-MM-DD).
  */
 export const daysBetween = (dateStr1: string, dateStr2: string): number => {
-  const d1 = new Date(dateStr1.replace(/-/g, '/'));
-  const d2 = new Date(dateStr2.replace(/-/g, '/'));
+  const d1 = new Date(dateStr1);
+  const d2 = new Date(dateStr2);
   const diffTime = d2.getTime() - d1.getTime();
   return Math.floor(diffTime / (1000 * 60 * 60 * 24));
 };

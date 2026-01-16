@@ -103,9 +103,10 @@ const WeeklyGoals: React.FC<WeeklyGoalsProps> = ({
     if (selectedSubjectForTopic && selectedTopicForGoal) {
       const topicKey = createTopicKey(selectedSubjectForTopic, selectedTopicForGoal);
       const currentGoal = topicGoals[topicKey] || 0;
-      const newGoal = prompt(t.setTopicGoalPrompt || `Meta semanal para "${selectedTopicForGoal}" (horas):`, currentGoal.toString());
-      if (newGoal !== null) {
-        const hours = parseFloat(newGoal) || 0;
+      const newGoalStr = prompt(t.setTopicGoalPrompt || `Meta semanal para "${selectedTopicForGoal}" (horas):`, currentGoal.toString());
+      if (newGoalStr !== null) {
+        const parsedValue = parseFloat(newGoalStr);
+        const hours = isNaN(parsedValue) ? 0 : Math.max(0, parsedValue);
         onSetTopicGoal(topicKey, hours);
       }
     }
