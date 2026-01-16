@@ -657,6 +657,35 @@ const App: React.FC = () => {
     });
   };
 
+  const postponeReview = (topicKey: string) => {
+    if (appData.settings.isVacationMode) return;
+    
+    setAppData(prev => {
+      const currentReviewState = prev.reviewStates?.[topicKey];
+      if (!currentReviewState) return prev;
+      
+      // Add 1 day to the due date
+      const currentDueDate = new Date(currentReviewState.dueAt);
+      const newDueDate = new Date(currentDueDate);
+      newDueDate.setDate(currentDueDate.getDate() + 1);
+      
+      return {
+        ...prev,
+        reviewStates: {
+          ...prev.reviewStates,
+          [topicKey]: {
+            ...currentReviewState,
+            dueAt: newDueDate.toISOString(),
+            updatedAt: new Date().toISOString()
+          }
+        }
+      };
+    });
+    
+    // Show feedback
+    alert(t.postponeSuccess || 'Revisão adiada para +1 dia');
+  };
+
   if (!isDataLoaded) {
     return (
       <div className="h-screen w-full bg-[#09090b] flex flex-col items-center justify-center gap-6">
@@ -736,7 +765,7 @@ const App: React.FC = () => {
             />
           )}
           {activeTab === 'resumo' && <DailySummary logs={appData.logs} goals={appData.goals} theme={appData.settings.theme} t={t} />}
-          {activeTab === 'revisar' && <ReviewView reviewStates={appData.reviewStates || {}} theme={appData.settings.theme} t={t} />}
+          {activeTab === 'revisar' && <ReviewView reviewStates={appData.reviewStates || {}} theme={appData.settings.theme} t={t} onPostpone={postponeReview} isVacationMode={appData.settings.isVacationMode} reviewSessionLimit={appData.settings.reviewSessionLimit} />}
           {activeTab === 'conquistas' && <Achievements state={appData} onSelectHighlight={(id) => setAppData(prev => ({ ...prev, selectedAchievementId: id }))} onMarkSeen={(id) => setAppData(prev => {
             const viewed = new Set(prev.viewedAchievements || []);
             if (viewed.has(id)) return prev;

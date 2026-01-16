@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { User, Moon, Sun, Monitor, Shield, Database, Download, Upload, Trophy, Clock, CheckSquare, Zap, Languages, Trash2, Settings as SettingsIcon, Flame, Terminal, Play, Key, X, Check, Sparkles, Crown, Target, Lock } from 'lucide-react';
+import { User, Moon, Sun, Monitor, Shield, Database, Download, Upload, Trophy, Clock, CheckSquare, Zap, Languages, Trash2, Settings as SettingsIcon, Flame, Terminal, Play, Key, X, Check, Sparkles, Crown, Target, Lock, Calendar } from 'lucide-react';
 import { UserSettings, AppState, QuestionData, Language } from '../types';
 import { formatTimeShort, calculateStreak, isEliteThemeUnlocked, isMestreThemeUnlocked } from '../utils';
 
@@ -376,6 +376,63 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate, theme, appState
                 <span className="text-[10px] font-black uppercase tracking-widest">{lang.name}</span>
               </button>
             ))}
+          </div>
+        </div>
+
+        {/* REVIEW SETTINGS SECTION */}
+        <div className={`p-6 rounded-[2rem] shadow-lg md:col-span-2 transition-all duration-500 ${isLight ? 'bg-white border border-zinc-100 shadow-zinc-200/40' : 'glass-panel'}`}>
+          <div className="flex items-center gap-3 mb-6">
+            <div className={`p-2.5 rounded-xl ${isLight ? 'bg-emerald-50 text-emerald-600' : 'bg-emerald-500/10 text-emerald-400'}`}>
+              <Calendar size={18} />
+            </div>
+            <h2 className={`text-lg font-bold ${isLight ? 'text-zinc-800' : 'text-white'}`}>{t.reviewTitle || 'Configurações de Revisão'}</h2>
+          </div>
+          <div className="space-y-6">
+            {/* Review Session Limit */}
+            <div>
+              <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isLight ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                {t.reviewSessionLimit || 'Limite de Sessão de Revisão'}
+              </label>
+              <p className={`text-xs mb-3 ${isLight ? 'text-zinc-500' : 'text-zinc-500'}`}>
+                {t.reviewSessionLimitDesc || 'Número máximo de tópicos a revisar por sessão (0 = sem limite)'}
+              </p>
+              <input 
+                type="number"
+                min="0"
+                max="100"
+                value={settings.reviewSessionLimit || 0}
+                onChange={(e) => onUpdate({ reviewSessionLimit: parseInt(e.target.value) || 0 })}
+                className={`w-full px-4 py-3 rounded-xl border text-sm font-semibold transition-all outline-none ${
+                  isLight 
+                    ? 'bg-zinc-50 border-zinc-200 text-zinc-900 focus:border-emerald-500' 
+                    : 'bg-zinc-900/50 border-zinc-800 text-white focus:border-emerald-500'
+                }`}
+              />
+            </div>
+
+            {/* Vacation Mode */}
+            <div className={`p-4 rounded-xl border ${isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/40 border-zinc-800'}`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className={`text-sm font-bold mb-1 ${isLight ? 'text-zinc-800' : 'text-white'}`}>
+                    {t.vacationMode || 'Modo Férias'}
+                  </h3>
+                  <p className={`text-xs ${isLight ? 'text-zinc-500' : 'text-zinc-500'}`}>
+                    {t.vacationModeDesc || 'Pausar todos os agendamentos de revisão'}
+                  </p>
+                </div>
+                <button 
+                  onClick={() => onUpdate({ isVacationMode: !settings.isVacationMode })}
+                  className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                    settings.isVacationMode 
+                      ? 'bg-emerald-600 text-white shadow-lg' 
+                      : isLight ? 'bg-zinc-200 border-zinc-300 text-zinc-500' : 'bg-zinc-800 text-zinc-500'
+                  }`}
+                >
+                  {settings.isVacationMode ? t.statusActive : t.statusDisabled}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
