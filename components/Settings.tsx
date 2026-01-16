@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
-import { User, Moon, Sun, Monitor, Shield, Database, Download, Upload, Trophy, Clock, CheckSquare, Zap, Languages, Trash2, Settings as SettingsIcon, Flame, Terminal, Play, Key, X, Check, Sparkles } from 'lucide-react';
+import { User, Moon, Sun, Monitor, Shield, Database, Download, Upload, Trophy, Clock, CheckSquare, Zap, Languages, Trash2, Settings as SettingsIcon, Flame, Terminal, Play, Key, X, Check, Sparkles, Crown, Target, Lock } from 'lucide-react';
 import { UserSettings, AppState, QuestionData, Language } from '../types';
-import { formatTimeShort, calculateStreak } from '../utils';
+import { formatTimeShort, calculateStreak, isEliteThemeUnlocked, isMestreThemeUnlocked } from '../utils';
 
 interface SettingsProps {
   settings: UserSettings;
@@ -26,6 +26,14 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate, theme, appState
   const [passwordError, setPasswordError] = useState(false);
 
   const isDivineUnlocked = appState.unlockedAchievements?.includes('div-101');
+
+  // Calculate dynamic theme unlock status
+  const eliteUnlocked = isEliteThemeUnlocked(appState.logs);
+  const mestreUnlocked = isMestreThemeUnlocked(appState.logs);
+  
+  const totalSeconds = appState.logs.reduce((acc, log) => acc + log.duration, 0);
+  const totalHours = totalSeconds / 3600;
+  const currentStreak = calculateStreak(appState.logs);
 
   const statsSummary = React.useMemo(() => {
     const totalSec = appState.logs.reduce((acc, log) => acc + log.duration, 0);
@@ -229,6 +237,88 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate, theme, appState
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* DYNAMIC THEMES SECTION */}
+        <div className={`p-6 rounded-[2rem] shadow-lg md:col-span-2 transition-all duration-500 ${isLight ? 'bg-white border border-zinc-100 shadow-zinc-200/40' : 'glass-panel'}`}>
+          <div className="flex items-center gap-3 mb-6">
+            <div className={`p-2.5 rounded-xl ${isLight ? 'bg-purple-50 text-purple-600' : 'bg-purple-500/10 text-purple-400'}`}>
+              <Crown size={18} />
+            </div>
+            <div className="flex-1">
+              <h2 className={`text-lg font-bold ${isLight ? 'text-zinc-800' : 'text-white'}`}>{t.dynamicThemes || 'Temas Dinâmicos'}</h2>
+              <p className={`text-xs ${isLight ? 'text-zinc-500' : 'text-zinc-500'}`}>{t.dynamicThemesDescription || 'Temas exclusivos desbloqueados com suas conquistas'}</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Elite Theme */}
+            <button 
+              onClick={() => eliteUnlocked && onUpdate({ theme: 'elite' })}
+              disabled={!eliteUnlocked}
+              className={`flex flex-col gap-3 p-5 rounded-2xl border-2 transition-all group relative overflow-hidden ${
+                settings.theme === 'elite' 
+                  ? 'border-yellow-500 bg-yellow-500/10 text-yellow-400 shadow-lg shadow-yellow-500/20' 
+                  : eliteUnlocked
+                    ? isLight 
+                      ? 'border-zinc-200 hover:border-yellow-300 text-zinc-700 hover:text-yellow-600 bg-zinc-50' 
+                      : 'border-zinc-800 hover:border-yellow-500/50 text-zinc-400 hover:text-yellow-400'
+                    : 'border-zinc-800 text-zinc-600 cursor-not-allowed opacity-50'
+              }`}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-yellow-900/20 to-yellow-600/20 opacity-20"></div>
+              <div className="flex items-center justify-between relative z-10">
+                <div className="flex items-center gap-2">
+                  <Crown size={20} className={settings.theme === 'elite' ? 'animate-pulse' : ''} />
+                  <span className="text-sm font-black uppercase tracking-widest">{t.eliteTheme || 'Elite'}</span>
+                </div>
+                {!eliteUnlocked && <Lock size={16} />}
+              </div>
+              <p className={`text-xs text-left relative z-10 ${isLight ? 'text-zinc-500' : 'text-zinc-500'}`}>
+                {eliteUnlocked 
+                  ? (t.eliteThemeUnlocked || 'Fundo escuro com destaques dourados para celebrar suas conquistas')
+                  : (t.eliteThemeLocked || `Desbloqueie estudando 100 horas (${Math.floor(totalHours)}/100h)`)}
+              </p>
+              {eliteUnlocked && settings.theme === 'elite' && (
+                <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-yellow-500 relative z-10">
+                  <Check size={12} /> {t.statusActive || 'Ativo'}
+                </div>
+              )}
+            </button>
+
+            {/* Mestre Theme */}
+            <button 
+              onClick={() => mestreUnlocked && onUpdate({ theme: 'mestre' })}
+              disabled={!mestreUnlocked}
+              className={`flex flex-col gap-3 p-5 rounded-2xl border-2 transition-all group relative overflow-hidden ${
+                settings.theme === 'mestre' 
+                  ? 'border-red-500 bg-red-500/10 text-red-400 shadow-lg shadow-red-500/20' 
+                  : mestreUnlocked
+                    ? isLight 
+                      ? 'border-zinc-200 hover:border-red-300 text-zinc-700 hover:text-red-600 bg-zinc-50' 
+                      : 'border-zinc-800 hover:border-red-500/50 text-zinc-400 hover:text-red-400'
+                    : 'border-zinc-800 text-zinc-600 cursor-not-allowed opacity-50'
+              }`}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-red-900/20 to-red-600/20 opacity-20"></div>
+              <div className="flex items-center justify-between relative z-10">
+                <div className="flex items-center gap-2">
+                  <Target size={20} className={settings.theme === 'mestre' ? 'animate-pulse' : ''} />
+                  <span className="text-sm font-black uppercase tracking-widest">{t.mestreTheme || 'Mestre'}</span>
+                </div>
+                {!mestreUnlocked && <Lock size={16} />}
+              </div>
+              <p className={`text-xs text-left relative z-10 ${isLight ? 'text-zinc-500' : 'text-zinc-500'}`}>
+                {mestreUnlocked 
+                  ? (t.mestreThemeUnlocked || 'Cinza escuro com vermelho para representar sua consistência')
+                  : (t.mestreThemeLocked || `Desbloqueie estudando 30 dias consecutivos (${currentStreak}/30 dias)`)}
+              </p>
+              {mestreUnlocked && settings.theme === 'mestre' && (
+                <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-red-500 relative z-10">
+                  <Check size={12} /> {t.statusActive || 'Ativo'}
+                </div>
+              )}
+            </button>
           </div>
         </div>
 

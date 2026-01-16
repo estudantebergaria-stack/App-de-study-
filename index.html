@@ -22,6 +22,7 @@
         background-color: #09090b;
         color: #f4f4f5;
         margin: 0;
+        transition: background 0.7s ease, color 0.7s ease;
       }
       /* Custom Scrollbar for Dark Mode */
       .custom-scrollbar::-webkit-scrollbar {
@@ -94,6 +95,30 @@
       }
       .preset-neon-pink .custom-scrollbar::-webkit-scrollbar-thumb:hover {
         background: #f472b6;
+      }
+
+      /* Elite Theme - Dark background with gold accents */
+      .preset-elite {
+        background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #0a0a0a 100%) !important;
+        color: #ffd700 !important;
+      }
+      .preset-elite .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #d4af37;
+      }
+      .preset-elite .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #ffd700;
+      }
+
+      /* Mestre Theme - Dark gray background with red accents */
+      .preset-mestre {
+        background: linear-gradient(135deg, #1c1c1c 0%, #2d2d2d 50%, #1a1a1a 100%) !important;
+        color: #ff4444 !important;
+      }
+      .preset-mestre .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cc0000;
+      }
+      .preset-mestre .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #ff4444;
       }
 
       .glass-panel {
