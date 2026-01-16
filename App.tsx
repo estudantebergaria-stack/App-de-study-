@@ -20,7 +20,7 @@ import ReviewView from './components/ReviewView';
 import { TRANSLATIONS } from './translations';
 import { ACHIEVEMENTS } from './constants/achievements';
 import { getData, saveData } from './services/db';
-import { getTodayISO, createTopicKey, getBaseInterval, getDifficultyMultiplier } from './utils';
+import { getTodayISO, createTopicKey, getBaseInterval, getDifficultyMultiplier, calculateStreak } from './utils';
 
 const DEFAULT_COLORS = ['#6366f1', '#10b981', '#f43f5e', '#f59e0b', '#0ea5e9', '#8b5cf6', '#f97316', '#84cc16', '#ec4899', '#64748b'];
 const START_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3';
@@ -65,12 +65,12 @@ const App: React.FC = () => {
 
   useEffect(() => {
     // Remove all theme classes first
-    document.body.classList.remove('light-theme', 'preset-neon-purple', 'preset-neon-blue', 'preset-neon-green', 'preset-neon-pink');
+    document.body.classList.remove('light-theme', 'preset-neon-purple', 'preset-neon-blue', 'preset-neon-green', 'preset-neon-pink', 'preset-elite', 'preset-mestre');
     
     // Apply the selected theme class
     if (appData.settings.theme === 'light') {
       document.body.classList.add('light-theme');
-    } else if (appData.settings.theme.startsWith('neon-')) {
+    } else if (appData.settings.theme.startsWith('neon-') || appData.settings.theme === 'elite' || appData.settings.theme === 'mestre') {
       document.body.classList.add(`preset-${appData.settings.theme}`);
     }
     // 'dark' theme is the default, no class needed
@@ -219,6 +219,35 @@ const App: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [appData.logs.length, checkAchievements, isDataLoaded]);
+
+  // Auto-switch theme based on achievements
+  useEffect(() => {
+    if (!isDataLoaded) return;
+    
+    // Only auto-switch if user is still on the default dark theme
+    // This prevents overriding manual theme selections
+    if (appData.settings.theme !== 'dark') return;
+    
+    const totalSeconds = appData.logs.reduce((acc, log) => acc + log.duration, 0);
+    const totalHours = totalSeconds / 3600;
+    const currentStreak = calculateStreak(appData.logs);
+    
+    // Check if Elite theme should be auto-applied (100 hours)
+    if (totalHours >= 100) {
+      setAppData(prev => ({
+        ...prev,
+        settings: { ...prev.settings, theme: 'elite' }
+      }));
+    }
+    // Check if Mestre theme should be auto-applied (30 consecutive days)
+    // Only check this if Elite wasn't just unlocked
+    else if (currentStreak >= 30) {
+      setAppData(prev => ({
+        ...prev,
+        settings: { ...prev.settings, theme: 'mestre' }
+      }));
+    }
+  }, [appData.logs.length, isDataLoaded, appData.settings.theme, setAppData]);
 
   const [timerSession, setTimerSessionState] = useState({
     mode: 'pomodoro' as TimerMode,

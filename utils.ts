@@ -158,3 +158,19 @@ export const calculateStreak = (logs: StudyLog[]): number => {
 
   return streak;
 };
+
+/**
+ * Verifica se o tema Elite foi desbloqueado (100 horas de estudo).
+ */
+export const isEliteThemeUnlocked = (logs: StudyLog[]): boolean => {
+  const totalSeconds = logs.reduce((acc, log) => acc + log.duration, 0);
+  const totalHours = totalSeconds / 3600;
+  return totalHours >= 100;
+};
+
+/**
+ * Verifica se o tema Mestre foi desbloqueado (30 dias consecutivos).
+ */
+export const isMestreThemeUnlocked = (logs: StudyLog[]): boolean => {
+  return calculateStreak(logs) >= 30;
+};

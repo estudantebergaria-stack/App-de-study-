@@ -25,7 +25,7 @@ export interface QuestionData {
   incorrect: number;
 }
 
-export type ThemePreset = 'dark' | 'light' | 'neon-purple' | 'neon-blue' | 'neon-green' | 'neon-pink';
+export type ThemePreset = 'dark' | 'light' | 'neon-purple' | 'neon-blue' | 'neon-green' | 'neon-pink' | 'elite' | 'mestre';
 
 export interface UserSettings {
   theme: ThemePreset;
