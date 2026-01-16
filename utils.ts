@@ -26,13 +26,6 @@ export const toLocalISO = (date: Date) => {
 export const getTodayISO = () => toLocalISO(new Date());
 
 /**
- * Returns the local date key (YYYY-MM-DD) for a given date.
- */
-export const getLocalDayKey = (date: Date): string => {
-  return toLocalISO(date);
-};
-
-/**
  * Returns start and end date keys for the current week (Monday-Sunday).
  */
 export const getWeekRange = (): { start: string; end: string } => {

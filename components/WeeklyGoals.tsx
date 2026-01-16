@@ -90,15 +90,6 @@ const WeeklyGoals: React.FC<WeeklyGoalsProps> = ({
     };
   }, [logsThisWeek, logsLastWeek]);
 
-  const getStartOfWeek = () => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    const day = d.getDay(); // 0 Dom, 1 Seg, 2 Ter...
-    const diff = day === 0 ? -6 : 1 - day;
-    d.setDate(d.getDate() + diff);
-    return toLocalISO(d);
-  };
-
   const handleSetTopicGoal = () => {
     if (selectedSubjectForTopic && selectedTopicForGoal) {
       const topicKey = createTopicKey(selectedSubjectForTopic, selectedTopicForGoal);
