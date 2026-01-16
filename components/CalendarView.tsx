@@ -167,7 +167,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ logs, reviewStates = {}, ex
                     {date.getDate()}
                   </span>
                   {totalDuration > 0 && (
-                    <span className="text-[10px] font-mono font-bold theme-accent bg-opacity-10 px-1.5 py-0.5 rounded border border-opacity-20">
+                    <span className="text-[10px] font-mono font-bold theme-accent opacity-80 px-1.5 py-0.5 rounded border">
                       {formatTimeShort(totalDuration)}
                     </span>
                   )}
