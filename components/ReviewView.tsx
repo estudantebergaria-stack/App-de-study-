@@ -1,6 +1,6 @@
 
 import React, { useMemo, useState } from 'react';
-import { Calendar, Clock, TrendingUp, BookOpen, Target } from 'lucide-react';
+import { Calendar, Clock, TrendingUp, BookOpen, Target, CalendarClock } from 'lucide-react';
 import { ReviewState } from '../types';
 import { parseTopicKey, toLocalISO, daysBetween } from '../utils';
 
@@ -8,6 +8,9 @@ interface ReviewViewProps {
   reviewStates: Record<string, ReviewState>;
   theme?: 'dark' | 'light';
   t: any;
+  onPostpone?: (topicKey: string) => void;
+  isVacationMode?: boolean;
+  reviewSessionLimit?: number;
 }
 
 interface DueTopicInfo {
@@ -18,7 +21,7 @@ interface DueTopicInfo {
   daysOverdue: number;
 }
 
-const ReviewView: React.FC<ReviewViewProps> = ({ reviewStates, theme = 'dark', t }) => {
+const ReviewView: React.FC<ReviewViewProps> = ({ reviewStates, theme = 'dark', t, onPostpone, isVacationMode = false, reviewSessionLimit = 0 }) => {
   const isLight = theme === 'light';
   const [sortBy, setSortBy] = useState<'overdue' | 'subject'>('overdue');
   
@@ -52,8 +55,13 @@ const ReviewView: React.FC<ReviewViewProps> = ({ reviewStates, theme = 'dark', t
       });
     }
     
+    // Apply session limit if set
+    if (reviewSessionLimit > 0) {
+      return topics.slice(0, reviewSessionLimit);
+    }
+    
     return topics;
-  }, [reviewStates, sortBy]);
+  }, [reviewStates, sortBy, reviewSessionLimit]);
   
   const upcomingTopics = useMemo(() => {
     const today = toLocalISO(new Date());
@@ -100,6 +108,25 @@ const ReviewView: React.FC<ReviewViewProps> = ({ reviewStates, theme = 'dark', t
           {t.reviewSubtitle || 'Revise os tópicos agendados para reforçar seu aprendizado'}
         </p>
       </div>
+      
+      {/* Vacation Mode Banner */}
+      {isVacationMode && (
+        <div className={`p-5 rounded-2xl border-2 ${
+          isLight ? 'bg-amber-50 border-amber-200' : 'bg-amber-500/10 border-amber-500/30'
+        }`}>
+          <div className="flex items-center gap-3">
+            <CalendarClock size={24} className="text-amber-500" />
+            <div>
+              <h3 className={`font-bold ${isLight ? 'text-amber-900' : 'text-amber-400'}`}>
+                {t.vacationModeActive || 'Modo Férias está ativo - revisões pausadas'}
+              </h3>
+              <p className={`text-sm ${isLight ? 'text-amber-700' : 'text-amber-500/80'}`}>
+                {t.vacationModeDesc || 'Todos os agendamentos de revisão estão pausados'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Stats Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -260,6 +287,21 @@ const ReviewView: React.FC<ReviewViewProps> = ({ reviewStates, theme = 'dark', t
                         </div>
                       </div>
                     </div>
+                    
+                    {/* Postpone Button */}
+                    {onPostpone && !isVacationMode && (
+                      <button
+                        onClick={() => onPostpone(item.topicKey)}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all ${
+                          isLight 
+                            ? 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200' 
+                            : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                        }`}
+                      >
+                        <CalendarClock size={18} />
+                        {t.postpone || 'Adiar'}
+                      </button>
+                    )}
                   </div>
                 </div>
               );

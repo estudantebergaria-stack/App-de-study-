@@ -33,6 +33,8 @@ export interface UserSettings {
   language: Language;
   isTestMode?: boolean;
   isEpicMode?: boolean;
+  reviewSessionLimit?: number; // Maximum number of topics to review per session
+  isVacationMode?: boolean; // When true, pause all review scheduling
 }
 
 export interface ReviewState {

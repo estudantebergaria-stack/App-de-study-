@@ -50,6 +50,7 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentDate, setCurrentDate] = useState(getTodayISO());
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   
   const [appData, setAppDataState] = useState<AppState>(INITIAL_STATE);
 
@@ -657,6 +658,44 @@ const App: React.FC = () => {
     });
   };
 
+  const postponeReview = (topicKey: string) => {
+    if (appData.settings.isVacationMode) return;
+    
+    setAppData(prev => {
+      const currentReviewState = prev.reviewStates?.[topicKey];
+      if (!currentReviewState) return prev;
+      
+      // Add 1 day to the due date
+      const currentDueDate = new Date(currentReviewState.dueAt);
+      const newDueDate = new Date(currentDueDate);
+      newDueDate.setDate(currentDueDate.getDate() + 1);
+      
+      return {
+        ...prev,
+        reviewStates: {
+          ...prev.reviewStates,
+          [topicKey]: {
+            ...currentReviewState,
+            dueAt: newDueDate.toISOString(),
+            updatedAt: new Date().toISOString()
+          }
+        }
+      };
+    });
+    
+    // Show feedback
+    setToastMessage(t.postponeSuccess || 'Review postponed for +1 day');
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  // Auto-hide toast
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
+
   if (!isDataLoaded) {
     return (
       <div className="h-screen w-full bg-[#09090b] flex flex-col items-center justify-center gap-6">
@@ -736,7 +775,7 @@ const App: React.FC = () => {
             />
           )}
           {activeTab === 'resumo' && <DailySummary logs={appData.logs} goals={appData.goals} theme={appData.settings.theme} t={t} />}
-          {activeTab === 'revisar' && <ReviewView reviewStates={appData.reviewStates || {}} theme={appData.settings.theme} t={t} />}
+          {activeTab === 'revisar' && <ReviewView reviewStates={appData.reviewStates || {}} theme={appData.settings.theme} t={t} onPostpone={postponeReview} isVacationMode={appData.settings.isVacationMode} reviewSessionLimit={appData.settings.reviewSessionLimit} />}
           {activeTab === 'conquistas' && <Achievements state={appData} onSelectHighlight={(id) => setAppData(prev => ({ ...prev, selectedAchievementId: id }))} onMarkSeen={(id) => setAppData(prev => {
             const viewed = new Set(prev.viewedAchievements || []);
             if (viewed.has(id)) return prev;
@@ -752,7 +791,7 @@ const App: React.FC = () => {
           }} theme={appData.settings.theme} t={t} />}
           {activeTab === 'calendario' && <CalendarView logs={appData.logs} reviewStates={appData.reviewStates} examEvents={appData.examEvents} theme={appData.settings.theme} t={t} />}
           {activeTab === 'weekly' && <WeeklyGoals subjects={appData.subjects} topics={appData.topics} logs={appData.logs} goals={appData.goals} topicGoals={appData.topicGoals || {}} onSetGoal={(sub, hrs) => setAppData(prev => ({ ...prev, goals: { ...prev.goals, [sub]: hrs } }))} onSetTopicGoal={(key, hrs) => setAppData(prev => ({ ...prev, topicGoals: { ...prev.topicGoals, [key]: hrs } }))} theme={appData.settings.theme} t={t} />}
-          {activeTab === 'stats' && <Stats subjects={appData.subjects} logs={appData.logs} subjectColors={appData.subjectColors || {}} theme={appData.settings.theme} t={t} />}
+          {activeTab === 'stats' && <Stats subjects={appData.subjects} logs={appData.logs} subjectColors={appData.subjectColors || {}} reviewStates={appData.reviewStates} theme={appData.settings.theme} t={t} />}
           {activeTab === 'subjects_manage' && <ManageSubjectsView subjects={appData.subjects} topics={appData.topics} subjectColors={appData.subjectColors || {}} onAddSubject={addSubject} onDeleteSubject={deleteSubject} onRenameSubject={renameSubject} onSetColor={(s, c) => setAppData(prev => ({ ...prev, subjectColors: { ...prev.subjectColors, [s]: c } }))} onAddTopic={(s, tp) => setAppData(prev => ({ ...prev, topics: { ...prev.topics, [s]: [...(prev.topics[s] || []), tp] } }))} onDeleteTopic={(s, tp) => setAppData(prev => ({ ...prev, topics: { ...prev.topics, [s]: prev.topics[s].filter(t => t !== tp) } }))} onRenameTopic={renameTopic} theme={appData.settings.theme} t={t} />}
           {activeTab === 'provas' && <ExamsView 
             examEvents={appData.examEvents || []} 
@@ -772,6 +811,22 @@ const App: React.FC = () => {
           {activeTab === 'settings' && <Settings settings={appData.settings} onUpdate={(s) => setAppData(prev => ({ ...prev, settings: { ...prev.settings, ...s } }))} theme={appData.settings.theme} appState={appData} onExport={handleExport} onImport={handleImport} onReset={() => setAppData(() => INITIAL_STATE)} onUnlockAll={unlockAllAchievements} onGenerateTestData={generateTestData} t={t} />}
         </div>
       </main>
+      
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-8 right-8 z-50 animate-fade-in">
+          <div className={`px-6 py-4 rounded-2xl shadow-2xl border-2 ${
+            appData.settings.theme === 'light' 
+              ? 'bg-white border-emerald-200 text-zinc-900' 
+              : 'bg-zinc-900 border-emerald-500/50 text-white'
+          }`}>
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="font-bold text-sm">{toastMessage}</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
