@@ -174,11 +174,19 @@ const Stats: React.FC<StatsProps> = ({ subjects, logs, subjectColors, reviewStat
   const intervalDistributionData = useMemo(() => {
     const today = toLocalISO(new Date());
     const intervals: Record<string, number> = {
-      '0-1 dias': 0,
-      '2-7 dias': 0,
-      '8-30 dias': 0,
-      '31-90 dias': 0,
-      '90+ dias': 0
+      [t.interval_0_1 || '0-1 dias']: 0,
+      [t.interval_2_7 || '2-7 dias']: 0,
+      [t.interval_8_30 || '8-30 dias']: 0,
+      [t.interval_31_90 || '31-90 dias']: 0,
+      [t.interval_90_plus || '90+ dias']: 0
+    };
+    
+    const keys = {
+      interval_0_1: t.interval_0_1 || '0-1 dias',
+      interval_2_7: t.interval_2_7 || '2-7 dias',
+      interval_8_30: t.interval_8_30 || '8-30 dias',
+      interval_31_90: t.interval_31_90 || '31-90 dias',
+      interval_90_plus: t.interval_90_plus || '90+ dias'
     };
     
     Object.values(reviewStates).forEach(state => {
@@ -186,20 +194,20 @@ const Stats: React.FC<StatsProps> = ({ subjects, logs, subjectColors, reviewStat
       const daysUntil = daysBetween(today, dueDate);
       
       if (daysUntil <= 1) {
-        intervals['0-1 dias']++;
+        intervals[keys.interval_0_1]++;
       } else if (daysUntil <= 7) {
-        intervals['2-7 dias']++;
+        intervals[keys.interval_2_7]++;
       } else if (daysUntil <= 30) {
-        intervals['8-30 dias']++;
+        intervals[keys.interval_8_30]++;
       } else if (daysUntil <= 90) {
-        intervals['31-90 dias']++;
+        intervals[keys.interval_31_90]++;
       } else {
-        intervals['90+ dias']++;
+        intervals[keys.interval_90_plus]++;
       }
     });
     
     return Object.entries(intervals).map(([name, value]) => ({ name, value }));
-  }, [reviewStates]);
+  }, [reviewStates, t]);
 
   const hasData = processedData.data.length > 0;
   const hasReviewData = Object.keys(reviewStates).length > 0;
@@ -482,7 +490,7 @@ const Stats: React.FC<StatsProps> = ({ subjects, logs, subjectColors, reviewStat
                     }}
                     labelStyle={{ color: isLight ? '#18181b' : '#ffffff', fontWeight: 'bold' }}
                     itemStyle={{ color: isLight ? '#18181b' : '#f4f4f5' }}
-                    formatter={(value: number) => [`${value} tópicos`, '']}
+                    formatter={(value: number) => [`${value} ${t.topics || 'tópicos'}`, '']}
                   />
                   <Bar dataKey="value" fill="#6366f1" radius={[8, 8, 0, 0]} />
                 </ReBarChart>

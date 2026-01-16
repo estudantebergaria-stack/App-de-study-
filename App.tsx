@@ -50,6 +50,7 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentDate, setCurrentDate] = useState(getTodayISO());
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   
   const [appData, setAppDataState] = useState<AppState>(INITIAL_STATE);
 
@@ -683,8 +684,17 @@ const App: React.FC = () => {
     });
     
     // Show feedback
-    alert(t.postponeSuccess || 'Revisão adiada para +1 dia');
+    setToastMessage(t.postponeSuccess || 'Revisão adiada para +1 dia');
+    setTimeout(() => setToastMessage(null), 3000);
   };
+
+  // Auto-hide toast
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
 
   if (!isDataLoaded) {
     return (
@@ -801,6 +811,22 @@ const App: React.FC = () => {
           {activeTab === 'settings' && <Settings settings={appData.settings} onUpdate={(s) => setAppData(prev => ({ ...prev, settings: { ...prev.settings, ...s } }))} theme={appData.settings.theme} appState={appData} onExport={handleExport} onImport={handleImport} onReset={() => setAppData(() => INITIAL_STATE)} onUnlockAll={unlockAllAchievements} onGenerateTestData={generateTestData} t={t} />}
         </div>
       </main>
+      
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-8 right-8 z-50 animate-fade-in">
+          <div className={`px-6 py-4 rounded-2xl shadow-2xl border-2 ${
+            appData.settings.theme === 'light' 
+              ? 'bg-white border-emerald-200 text-zinc-900' 
+              : 'bg-zinc-900 border-emerald-500/50 text-white'
+          }`}>
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="font-bold text-sm">{toastMessage}</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
