@@ -64,11 +64,16 @@ const App: React.FC = () => {
   }, [currentDate]);
 
   useEffect(() => {
+    // Remove all theme classes first
+    document.body.classList.remove('light-theme', 'preset-neon-purple', 'preset-neon-blue', 'preset-neon-green', 'preset-neon-pink');
+    
+    // Apply the selected theme class
     if (appData.settings.theme === 'light') {
       document.body.classList.add('light-theme');
-    } else {
-      document.body.classList.remove('light-theme');
+    } else if (appData.settings.theme.startsWith('neon-')) {
+      document.body.classList.add(`preset-${appData.settings.theme}`);
     }
+    // 'dark' theme is the default, no class needed
   }, [appData.settings.theme]);
 
   useEffect(() => {

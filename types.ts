@@ -25,8 +25,10 @@ export interface QuestionData {
   incorrect: number;
 }
 
+export type ThemePreset = 'dark' | 'light' | 'neon-purple' | 'neon-blue' | 'neon-green' | 'neon-pink';
+
 export interface UserSettings {
-  theme: 'dark' | 'light';
+  theme: ThemePreset;
   username: string;
   language: Language;
   isTestMode?: boolean;

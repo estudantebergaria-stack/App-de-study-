@@ -128,42 +128,106 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdate, theme, appState
           </div>
         </div>
 
-        <div className={`p-6 rounded-[2rem] shadow-lg transition-all duration-500 ${isLight ? 'bg-white border border-zinc-100 shadow-zinc-200/40' : 'glass-panel'}`}>
+        <div className={`p-6 rounded-[2rem] shadow-lg md:col-span-2 transition-all duration-500 ${isLight ? 'bg-white border border-zinc-100 shadow-zinc-200/40' : 'glass-panel'}`}>
           <div className="flex items-center gap-3 mb-6">
             <div className={`p-2.5 rounded-xl ${isLight ? 'bg-amber-50 text-amber-600' : 'bg-amber-500/10 text-amber-400'}`}>
               <Monitor size={18} />
             </div>
             <h2 className={`text-lg font-bold ${isLight ? 'text-zinc-800' : 'text-white'}`}>{t.appearance}</h2>
           </div>
-          <div className="space-y-3">
-            <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isLight ? 'text-zinc-400' : 'text-zinc-500'}`}>{t.chooseTheme}</label>
-            <div className="flex gap-3">
-              <button 
-                onClick={() => onUpdate({ theme: 'light' })}
-                className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all group ${
-                  settings.theme === 'light' 
-                    ? 'border-indigo-600 bg-indigo-50 text-indigo-600' 
-                    : isLight 
-                      ? 'border-zinc-100 hover:border-zinc-200 text-zinc-500' 
-                      : 'border-zinc-800 hover:border-zinc-700 text-zinc-500'
-                }`}
-              >
-                <Sun size={20} className={settings.theme === 'light' ? 'animate-spin-slow' : ''} />
-                <span className="text-[10px] font-black uppercase tracking-widest">{t.lightMode}</span>
-              </button>
-              <button 
-                onClick={() => onUpdate({ theme: 'dark' })}
-                className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all group ${
-                  settings.theme === 'dark' 
-                    ? 'border-indigo-600 bg-indigo-500/10 text-indigo-400' 
-                    : isLight 
-                      ? 'border-zinc-100 hover:border-zinc-200 text-zinc-500' 
-                      : 'border-zinc-800 hover:border-zinc-700 text-zinc-500'
-                }`}
-              >
-                <Moon size={20} />
-                <span className="text-[10px] font-black uppercase tracking-widest">{t.darkMode}</span>
-              </button>
+          <div className="space-y-4">
+            <div>
+              <label className={`block text-[10px] font-black uppercase tracking-widest mb-3 ${isLight ? 'text-zinc-400' : 'text-zinc-500'}`}>{t.chooseTheme}</label>
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <button 
+                  onClick={() => onUpdate({ theme: 'light' })}
+                  className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all group ${
+                    settings.theme === 'light' 
+                      ? 'border-indigo-600 bg-indigo-50 text-indigo-600' 
+                      : isLight 
+                        ? 'border-zinc-100 hover:border-zinc-200 text-zinc-500' 
+                        : 'border-zinc-800 hover:border-zinc-700 text-zinc-500'
+                  }`}
+                >
+                  <Sun size={20} className={settings.theme === 'light' ? 'animate-spin-slow' : ''} />
+                  <span className="text-[10px] font-black uppercase tracking-widest">{t.lightMode}</span>
+                </button>
+                <button 
+                  onClick={() => onUpdate({ theme: 'dark' })}
+                  className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all group ${
+                    settings.theme === 'dark' 
+                      ? 'border-indigo-600 bg-indigo-500/10 text-indigo-400' 
+                      : isLight 
+                        ? 'border-zinc-100 hover:border-zinc-200 text-zinc-500' 
+                        : 'border-zinc-800 hover:border-zinc-700 text-zinc-500'
+                  }`}
+                >
+                  <Moon size={20} />
+                  <span className="text-[10px] font-black uppercase tracking-widest">{t.darkMode}</span>
+                </button>
+              </div>
+            </div>
+            
+            <div>
+              <label className={`block text-[10px] font-black uppercase tracking-widest mb-3 ${isLight ? 'text-zinc-400' : 'text-zinc-500'}`}>{t.neonThemes || 'Temas Neon'}</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <button 
+                  onClick={() => onUpdate({ theme: 'neon-purple' })}
+                  className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all group relative overflow-hidden ${
+                    settings.theme === 'neon-purple' 
+                      ? 'border-purple-500 bg-purple-500/10 text-purple-400' 
+                      : isLight 
+                        ? 'border-zinc-100 hover:border-zinc-200 text-zinc-500' 
+                        : 'border-zinc-800 hover:border-zinc-700 text-zinc-500'
+                  }`}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 to-purple-600/20 opacity-30"></div>
+                  <Sparkles size={20} className="relative z-10" />
+                  <span className="text-[10px] font-black uppercase tracking-widest relative z-10">{t.neonPurple || 'Roxo'}</span>
+                </button>
+                <button 
+                  onClick={() => onUpdate({ theme: 'neon-blue' })}
+                  className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all group relative overflow-hidden ${
+                    settings.theme === 'neon-blue' 
+                      ? 'border-blue-500 bg-blue-500/10 text-blue-400' 
+                      : isLight 
+                        ? 'border-zinc-100 hover:border-zinc-200 text-zinc-500' 
+                        : 'border-zinc-800 hover:border-zinc-700 text-zinc-500'
+                  }`}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 to-blue-600/20 opacity-30"></div>
+                  <Zap size={20} className="relative z-10" />
+                  <span className="text-[10px] font-black uppercase tracking-widest relative z-10">{t.neonBlue || 'Azul'}</span>
+                </button>
+                <button 
+                  onClick={() => onUpdate({ theme: 'neon-green' })}
+                  className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all group relative overflow-hidden ${
+                    settings.theme === 'neon-green' 
+                      ? 'border-green-500 bg-green-500/10 text-green-400' 
+                      : isLight 
+                        ? 'border-zinc-100 hover:border-zinc-200 text-zinc-500' 
+                        : 'border-zinc-800 hover:border-zinc-700 text-zinc-500'
+                  }`}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-green-900/20 to-green-600/20 opacity-30"></div>
+                  <Flame size={20} className="relative z-10" />
+                  <span className="text-[10px] font-black uppercase tracking-widest relative z-10">{t.neonGreen || 'Verde'}</span>
+                </button>
+                <button 
+                  onClick={() => onUpdate({ theme: 'neon-pink' })}
+                  className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all group relative overflow-hidden ${
+                    settings.theme === 'neon-pink' 
+                      ? 'border-pink-500 bg-pink-500/10 text-pink-400' 
+                      : isLight 
+                        ? 'border-zinc-100 hover:border-zinc-200 text-zinc-500' 
+                        : 'border-zinc-800 hover:border-zinc-700 text-zinc-500'
+                  }`}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-pink-900/20 to-pink-600/20 opacity-30"></div>
+                  <Sparkles size={20} className="relative z-10" />
+                  <span className="text-[10px] font-black uppercase tracking-widest relative z-10">{t.neonPink || 'Rosa'}</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
