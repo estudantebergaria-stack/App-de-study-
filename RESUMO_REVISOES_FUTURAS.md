@@ -25,11 +25,11 @@ Conforme solicitado, realizei um teste adicional para ver o que acontece com as 
 | 13 | 9/10 | 90% | 63.8% | 8 | 40 dias |
 | 14 | 10/10 | 100% | 66.4% | 9 | 71 dias |
 | 15 | 10/10 | 100% | 68.7% | 10 | 125 dias |
-| 16 | 9/10 | 90% | 70.0% | 11 | 194 dias ⚠️ |
-| 17 | 10/10 | 100% | 71.8% | 12 | 201 dias ⚠️ |
-| 18 | 10/10 | 100% | 73.3% | 13 | 207 dias ⚠️ |
-| 19 | 10/10 | 100% | 74.7% | 14 | 213 dias ⚠️ |
-| 20 | 10/10 | 100% | 76.0% | 15 | 219 dias ⚠️ |
+| 16 | 9/10 | 90% | 70.0% | 11 | 180 dias ✅ |
+| 17 | 10/10 | 100% | 71.8% | 12 | 180 dias ✅ |
+| 18 | 10/10 | 100% | 73.3% | 13 | 180 dias ✅ |
+| 19 | 10/10 | 100% | 74.7% | 14 | 180 dias ✅ |
+| 20 | 10/10 | 100% | 76.0% | 15 | 180 dias ✅ |
 
 ### 📊 Crescimento Exponencial
 
@@ -39,42 +39,46 @@ Sessão 12: 22 dias   █████
 Sessão 13: 40 dias   ██████████
 Sessão 14: 71 dias   █████████████████
 Sessão 15: 125 dias  ███████████████████████████████
-Sessão 16: 194 dias  ████████████████████████████████████████████████
-Sessão 17: 201 dias  ██████████████████████████████████████████████████
-Sessão 18: 207 dias  ██████████████████████████████████████████████████
-Sessão 19: 213 dias  ██████████████████████████████████████████████████
-Sessão 20: 219 dias  ██████████████████████████████████████████████████
+Sessão 16: 180 dias  █████████████████████████████████████████████
+Sessão 17: 180 dias  █████████████████████████████████████████████
+Sessão 18: 180 dias  █████████████████████████████████████████████
+Sessão 19: 180 dias  █████████████████████████████████████████████
+Sessão 20: 180 dias  █████████████████████████████████████████████
 ```
 
-**Crescimento: 12 → 219 dias (aumento de 1725%!)**
+**Crescimento: 12 → 180 dias (aumento de 1400%, limitado ao máximo)**
 
-## 🔍 Descoberta Importante: BUG ENCONTRADO! ⚠️
+## ✅ Bug Corrigido!
 
-### O Problema
+### O Problema Original
 
-O teste revelou que **os intervalos estão ultrapassando o limite de 180 dias**:
+O teste inicial revelou que **os intervalos estavam ultrapassando o limite de 180 dias**:
 - Sessões 16-20: intervalos de 194 até 219 dias
 - O limite deveria ser **180 dias** (6 meses)
 
 ### Causa do Bug
 
-1. O intervalo base é corretamente limitado a 180 dias
-2. **MAS** o multiplicador de dificuldade pode ser > 1.0 para alta acurácia (>70%)
+1. O intervalo base era corretamente limitado a 180 dias
+2. **MAS** o multiplicador de dificuldade podia ser > 1.0 para alta acurácia (>70%)
 3. O cálculo final: `intervalDays = baseInterval × multiplier`
-4. Com acurácia de 76%, o multiplicador é ~1.21
-5. Resultado: `180 × 1.21 = 218 dias` ❌ (excede o limite!)
+4. Com acurácia de 76%, o multiplicador era ~1.21
+5. Resultado: `180 × 1.21 = 218 dias` ❌ (excedia o limite!)
 
-### Onde Está o Bug
+### ✅ Solução Aplicada
 
-**Arquivo**: `App.tsx` (linha 339)
+**Arquivos Corrigidos**: 
+- `App.tsx` (linha 339)
+- `test-joao-simulation.ts` (linha 92)
 
 ```typescript
-// Código atual (BUG):
+// Código anterior (BUG):
 const intervalDays = Math.max(1, Math.round(baseInterval * difficultyMult));
 
-// Deveria ser:
+// Código corrigido:
 const intervalDays = Math.max(1, Math.min(180, Math.round(baseInterval * difficultyMult)));
 ```
+
+Agora o limite de 180 dias é aplicado **DEPOIS** do multiplicador, garantindo que nunca seja excedido!
 
 ## 📊 Estatísticas das Revisões Futuras
 
@@ -82,18 +86,16 @@ const intervalDays = Math.max(1, Math.min(180, Math.round(baseInterval * difficu
 - **Acertos**: 97 (97.0% de taxa de acerto!)
 - **Erros**: 3
 - **Review count**: aumentou de 5 → 15
-- **Próxima revisão**: 219 dias (~7 meses)
+- **Próxima revisão**: 180 dias (limite máximo aplicado corretamente!)
 
 ## 🔮 Projeção de Intervalos Futuros
 
 Se João continuar com 95%+ de acerto:
 
-**Sem o fix do bug**:
-- Reviews 16-20+: ~180-220+ dias (excedendo o limite)
-
-**Com o fix do bug**:
+**Após a correção do bug**:
 - Reviews 16+: exatamente 180 dias (6 meses)
 - João revisará o tópico a cada 6 meses indefinidamente
+- O sistema está funcionando perfeitamente!
 
 ## 💡 Insights
 
@@ -103,25 +105,24 @@ Se João continuar com 95%+ de acerto:
 2. **Sistema Recompensa Domínio**: De revisões diárias para revisões mensais/semestrais
 3. **Review Count Aumenta**: Progressão de 5 → 15 está correta
 4. **Multiplicador de Dificuldade**: Funciona corretamente (>1.0 para alta acurácia)
-
-### ⚠️ Problema Encontrado
-
-5. **Limite de 180 dias não aplicado após multiplicador**: Intervalos podem exceder 180 dias
+5. **Limite de 180 dias**: Agora aplicado corretamente após o multiplicador ✅
 
 ## 🎯 Conclusão
 
-### Para o Comportamento Geral: ✅ FUNCIONA PERFEITAMENTE
+### Para o Sistema Completo: ✅ FUNCIONA PERFEITAMENTE (Bug Corrigido!)
 
-O sistema de revisão espaçada está funcionando **excelentemente bem**:
+O sistema de revisão espaçada está funcionando **perfeitamente bem**:
 - ✅ Intervalos curtos durante aprendizado (1-7 dias)
 - ✅ Crescimento exponencial conforme domínio
 - ✅ Recompensa consistência com menos revisões
 - ✅ Conteúdo dominado requer revisões esporádicas
+- ✅ **Limite de 180 dias aplicado corretamente**
 
-### Para o Limite Máximo: ⚠️ BUG ENCONTRADO
+### Status do Bug: ✅ CORRIGIDO
 
-- ❌ Intervalos podem exceder 180 dias quando acurácia > 70%
-- 🔧 Fix necessário: aplicar cap de 180 dias APÓS o multiplicador
+- ✅ Intervalos agora respeitam o limite de 180 dias
+- ✅ Fix aplicado em `App.tsx` e `test-joao-simulation.ts`
+- ✅ Testes confirmam que funciona corretamente
 
 ## 📄 Evolução Completa de João
 
@@ -150,6 +151,8 @@ O sistema de revisão espaçada está funcionando **excelentemente bem**:
 npm run test:joao-future
 ```
 
-## 📝 Recomendação
+## ✅ Status
 
-Corrigir o bug aplicando o limite de 180 dias após o cálculo do multiplicador de dificuldade, tanto em `App.tsx` quanto no sistema de simulação.
+**Bug Corrigido!** O sistema agora funciona perfeitamente, respeitando o limite de 180 dias mesmo com alta acurácia.
+
+Veja `COMO_FUNCIONA_REVISAO.md` para uma explicação completa e clara de como o sistema funciona.

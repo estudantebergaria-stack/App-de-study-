@@ -89,7 +89,8 @@ function simulateReviewScheduling(
     // Calculate next review date
     const baseInterval = getBaseInterval(newReviewCount);
     const difficultyMult = getDifficultyMultiplier(cumulativeAccuracy);
-    const intervalDays = Math.max(1, Math.round(baseInterval * difficultyMult));
+    // Apply 180-day cap after multiplier to ensure intervals never exceed maximum
+    const intervalDays = Math.max(1, Math.min(180, Math.round(baseInterval * difficultyMult)));
     
     const nextReviewDate = new Date(currentReviewState.updatedAt);
     nextReviewDate.setDate(nextReviewDate.getDate() + intervalDays);
