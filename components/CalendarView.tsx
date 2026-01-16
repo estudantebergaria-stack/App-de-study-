@@ -155,7 +155,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ logs, reviewStates = {}, ex
                 className={`
                   aspect-square border-r border-b p-2 md:p-3 relative group transition-all flex flex-col gap-1 text-left outline-none
                   ${isLight ? 'border-zinc-100' : 'border-zinc-800/50'}
-                  ${isToday ? (isLight ? 'bg-indigo-50' : 'theme-accent opacity-5') : (isLight ? 'hover:bg-zinc-50' : 'hover:bg-zinc-800/20')}
+                  ${isToday ? (isLight ? 'bg-indigo-50' : 'bg-indigo-600/5') : (isLight ? 'hover:bg-zinc-50' : 'hover:bg-zinc-800/20')}
                   ${hasActivity ? 'cursor-pointer' : 'cursor-default'}
                 `}
               >

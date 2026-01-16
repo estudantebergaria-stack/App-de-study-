@@ -150,7 +150,7 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
         isLight ? 'bg-white border-zinc-300 shadow-zinc-400/20' : 'glass-panel bg-[#0c0c0e]/90'
       }`}>
         <div 
-          className={`absolute inset-x-0 bottom-0 transition-all duration-1000 ${isBreak ? 'bg-emerald-600/5' : 'theme-accent opacity-10'}`}
+          className={`absolute inset-x-0 bottom-0 transition-all duration-1000 ${isBreak ? 'bg-emerald-600/5' : 'bg-indigo-600/5'}`}
           style={{ height: `${isPomo ? (1 - pomoTimeLeft/ (isBreak ? breakTimeTotal : workTime)) * 100 : 0}%` }}
         />
         
