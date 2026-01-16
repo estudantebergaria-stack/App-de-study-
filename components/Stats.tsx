@@ -1,8 +1,8 @@
 
 import React, { useMemo } from 'react';
-import { BarChart as BarChartIcon, PieChart as PieChartIcon, Clock, Layers, BarChart2 } from 'lucide-react';
-import { StudyLog } from '../types';
-import { formatTimeShort, toLocalISO } from '../utils';
+import { BarChart as BarChartIcon, PieChart as PieChartIcon, Clock, Layers, BarChart2, Calendar, TrendingUp } from 'lucide-react';
+import { StudyLog, ReviewState } from '../types';
+import { formatTimeShort, toLocalISO, parseTopicKey, daysBetween } from '../utils';
 import { 
   BarChart as ReBarChart, 
   Bar, 
@@ -13,13 +13,19 @@ import {
   ResponsiveContainer, 
   Cell,
   PieChart,
-  Pie
+  Pie,
+  LineChart,
+  Line,
+  Legend,
+  Area,
+  AreaChart
 } from 'recharts';
 
 interface StatsProps {
   subjects: string[];
   logs: StudyLog[];
   subjectColors: Record<string, string>;
+  reviewStates?: Record<string, ReviewState>;
   theme?: 'dark' | 'light';
   t: any;
 }
@@ -73,7 +79,7 @@ const CustomTooltip = ({ active, payload, label, isLight, t }: any) => {
   return null;
 };
 
-const Stats: React.FC<StatsProps> = ({ subjects, logs, subjectColors, theme = 'dark', t }) => {
+const Stats: React.FC<StatsProps> = ({ subjects, logs, subjectColors, reviewStates = {}, theme = 'dark', t }) => {
   const isLight = theme === 'light';
 
   const processedData = useMemo(() => {
@@ -120,7 +126,83 @@ const Stats: React.FC<StatsProps> = ({ subjects, logs, subjectColors, theme = 'd
     }));
   }, [processedData.data]);
 
+  // Future Reviews Forecast (next 30 days)
+  const futureReviewsData = useMemo(() => {
+    const today = toLocalISO(new Date());
+    const data: { date: string; count: number }[] = [];
+    
+    for (let i = 0; i <= 30; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() + i);
+      const dateStr = toLocalISO(date);
+      
+      const count = Object.values(reviewStates).filter(state => {
+        const dueDate = toLocalISO(new Date(state.dueAt));
+        return dueDate === dateStr;
+      }).length;
+      
+      data.push({ date: dateStr, count });
+    }
+    
+    return data;
+  }, [reviewStates]);
+
+  // Topic Maturity Analysis
+  const topicMaturityData = useMemo(() => {
+    const newTopics: string[] = [];
+    const learningTopics: string[] = [];
+    const matureTopics: string[] = [];
+    
+    Object.entries(reviewStates).forEach(([key, state]) => {
+      if (state.reviewCount === 0) {
+        newTopics.push(key);
+      } else if (state.reviewCount <= 3) {
+        learningTopics.push(key);
+      } else {
+        matureTopics.push(key);
+      }
+    });
+    
+    return [
+      { name: t.newTopics || 'Novos', value: newTopics.length, color: '#f59e0b' },
+      { name: t.learningTopics || 'Em Aprendizagem', value: learningTopics.length, color: '#3b82f6' },
+      { name: t.matureTopics || 'Maduros', value: matureTopics.length, color: '#10b981' }
+    ];
+  }, [reviewStates, t]);
+
+  // Review Interval Distribution
+  const intervalDistributionData = useMemo(() => {
+    const today = toLocalISO(new Date());
+    const intervals: Record<string, number> = {
+      '0-1 dias': 0,
+      '2-7 dias': 0,
+      '8-30 dias': 0,
+      '31-90 dias': 0,
+      '90+ dias': 0
+    };
+    
+    Object.values(reviewStates).forEach(state => {
+      const dueDate = toLocalISO(new Date(state.dueAt));
+      const daysUntil = daysBetween(today, dueDate);
+      
+      if (daysUntil <= 1) {
+        intervals['0-1 dias']++;
+      } else if (daysUntil <= 7) {
+        intervals['2-7 dias']++;
+      } else if (daysUntil <= 30) {
+        intervals['8-30 dias']++;
+      } else if (daysUntil <= 90) {
+        intervals['31-90 dias']++;
+      } else {
+        intervals['90+ dias']++;
+      }
+    });
+    
+    return Object.entries(intervals).map(([name, value]) => ({ name, value }));
+  }, [reviewStates]);
+
   const hasData = processedData.data.length > 0;
+  const hasReviewData = Object.keys(reviewStates).length > 0;
 
   return (
     <div className="space-y-10 animate-fade-in pb-20">
@@ -248,6 +330,166 @@ const Stats: React.FC<StatsProps> = ({ subjects, logs, subjectColors, theme = 'd
             </div>
           </div>
         </div>
+      )}
+
+      {/* Review Statistics Section */}
+      {hasReviewData && (
+        <>
+          <div className="mt-12">
+            <h2 className={`text-2xl font-black mb-6 ${isLight ? 'text-zinc-900' : 'text-white'}`}>
+              {t.reviewTitle || 'Estatísticas de Revisão'}
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Future Reviews Forecast */}
+            <div className={`p-8 md:p-10 rounded-[2.5rem] border shadow-2xl transition-all duration-500 ${
+              isLight ? 'bg-white border-zinc-200 shadow-zinc-300/20' : 'bg-[#0c0c0e]/80 border-zinc-800 shadow-black/40'
+            }`}>
+              <h3 className={`font-black text-xl mb-10 flex items-center gap-4 uppercase tracking-tighter theme-text-primary transition-all duration-500`}>
+                <Calendar size={24} className="theme-icon transition-all duration-500" /> {t.futureReviews || 'Revisões Futuras'}
+              </h3>
+              <div className="h-[300px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={futureReviewsData}>
+                    <defs>
+                      <linearGradient id="colorReviews" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "#f4f4f5" : "#18181b"} />
+                    <XAxis 
+                      dataKey="date" 
+                      stroke={isLight ? "#71717a" : "#52525b"}
+                      fontSize={10}
+                      fontWeight="900"
+                      tickLine={false}
+                      tickFormatter={(value) => {
+                        const date = new Date(value);
+                        return `${date.getDate()}/${date.getMonth() + 1}`;
+                      }}
+                    />
+                    <YAxis 
+                      stroke={isLight ? "#71717a" : "#52525b"}
+                      fontSize={11}
+                      fontWeight="900"
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: isLight ? '#ffffff' : '#09090b', 
+                        border: isLight ? '1px solid #d4d4d8' : '1px solid #27272a', 
+                        borderRadius: '12px'
+                      }}
+                      labelStyle={{ color: isLight ? '#18181b' : '#ffffff', fontWeight: 'bold' }}
+                      itemStyle={{ color: isLight ? '#18181b' : '#f4f4f5' }}
+                      formatter={(value: number) => [`${value} ${t.reviewsScheduled || 'revisões'}`, '']}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="count" 
+                      stroke="#6366f1" 
+                      strokeWidth={3}
+                      fillOpacity={1} 
+                      fill="url(#colorReviews)" 
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Topic Maturity */}
+            <div className={`p-8 md:p-10 rounded-[2.5rem] border shadow-2xl transition-all duration-500 ${
+              isLight ? 'bg-white border-zinc-200 shadow-zinc-300/20' : 'bg-[#0c0c0e]/80 border-zinc-800 shadow-black/40'
+            }`}>
+              <h3 className={`font-black text-xl mb-10 flex items-center gap-4 uppercase tracking-tighter theme-text-primary transition-all duration-500`}>
+                <TrendingUp size={24} className="theme-icon transition-all duration-500" /> {t.topicMaturity || 'Maturidade dos Tópicos'}
+              </h3>
+              <div className="h-[300px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={topicMaturityData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={100}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {topicMaturityData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: isLight ? '#ffffff' : '#09090b', 
+                        border: isLight ? '1px solid #d4d4d8' : '1px solid #27272a', 
+                        borderRadius: '12px'
+                      }}
+                      labelStyle={{ color: isLight ? '#18181b' : '#ffffff' }}
+                      itemStyle={{ color: isLight ? '#18181b' : '#f4f4f5' }}
+                    />
+                    <Legend 
+                      verticalAlign="bottom" 
+                      height={36}
+                      iconType="circle"
+                      formatter={(value, entry: any) => (
+                        <span className={`text-sm font-bold ${isLight ? 'text-zinc-700' : 'text-zinc-300'}`}>
+                          {value}
+                        </span>
+                      )}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+
+          {/* Review Interval Distribution */}
+          <div className={`p-8 md:p-10 rounded-[2.5rem] border shadow-2xl transition-all duration-500 ${
+            isLight ? 'bg-white border-zinc-200 shadow-zinc-300/20' : 'bg-[#0c0c0e]/80 border-zinc-800 shadow-black/40'
+          }`}>
+            <h3 className={`font-black text-xl mb-10 flex items-center gap-4 uppercase tracking-tighter theme-text-primary transition-all duration-500`}>
+              <BarChartIcon size={24} className="theme-icon transition-all duration-500" /> {t.intervalDistribution || 'Distribuição de Intervalos'}
+            </h3>
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <ReBarChart data={intervalDistributionData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "#f4f4f5" : "#18181b"} vertical={false} />
+                  <XAxis 
+                    dataKey="name" 
+                    stroke={isLight ? "#71717a" : "#52525b"}
+                    fontSize={11}
+                    fontWeight="900"
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis 
+                    stroke={isLight ? "#71717a" : "#52525b"}
+                    fontSize={11}
+                    fontWeight="900"
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: isLight ? '#ffffff' : '#09090b', 
+                      border: isLight ? '1px solid #d4d4d8' : '1px solid #27272a', 
+                      borderRadius: '12px'
+                    }}
+                    labelStyle={{ color: isLight ? '#18181b' : '#ffffff', fontWeight: 'bold' }}
+                    itemStyle={{ color: isLight ? '#18181b' : '#f4f4f5' }}
+                    formatter={(value: number) => [`${value} tópicos`, '']}
+                  />
+                  <Bar dataKey="value" fill="#6366f1" radius={[8, 8, 0, 0]} />
+                </ReBarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
