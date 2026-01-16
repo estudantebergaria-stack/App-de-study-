@@ -312,7 +312,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ logs, reviewStates = {}, ex
                               {topic}
                             </h4>
                             <p className={`text-xs font-medium ${isLight ? 'text-amber-600' : 'text-amber-400'}`}>
-                              {subject} • {state.reviewCount} {t.reviews || 'revisões'}
+                              {subject} • {state.reviewCount} {state.reviewCount === 1 ? (t.review || 'revisão') : (t.reviews || 'revisões')}
                             </p>
                           </div>
                         </div>
@@ -326,7 +326,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ logs, reviewStates = {}, ex
               {selectedDayLogs.length > 0 && (
                 <div className="space-y-4">
                   <h3 className={`text-sm font-black uppercase tracking-widest ${isLight ? 'text-zinc-500' : 'text-zinc-500'}`}>
-                    {t.breakdown || 'Detalhamento de Estudo'}
+                    {t.breakdown || 'Breakdown'}
                   </h3>
                   {(() => {
                     // Group by subject and topic
@@ -386,7 +386,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ logs, reviewStates = {}, ex
                         ))}
                         
                         <div className={`pt-4 border-t flex justify-between items-center ${isLight ? 'border-zinc-200' : 'border-zinc-800'}`}>
-                          <span className={`text-xs font-black uppercase tracking-widest ${isLight ? 'text-zinc-400' : 'text-zinc-500'}`}>Total do Dia</span>
+                          <span className={`text-xs font-black uppercase tracking-widest ${isLight ? 'text-zinc-400' : 'text-zinc-500'}`}>{t.totalDay || 'Daily Total'}</span>
                           <span className="text-xl font-black font-mono text-indigo-600">
                             {formatTimeShort(selectedDayLogs.reduce((acc, curr) => acc + curr.duration, 0))}
                           </span>
@@ -401,7 +401,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ logs, reviewStates = {}, ex
               {selectedDayLogs.length === 0 && selectedDayReviews.length === 0 && selectedDayExams.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-12 text-center opacity-40 gap-4">
                   <Clock size={48} className="text-zinc-600" />
-                  <p className="font-bold text-xs uppercase tracking-widest">{t.noActivityToday || 'Nenhuma atividade neste dia'}</p>
+                  <p className="font-bold text-xs uppercase tracking-widest">{t.noActivityToday || 'No activity today'}</p>
                 </div>
               )}
             </div>
