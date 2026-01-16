@@ -74,6 +74,12 @@ const App: React.FC = () => {
         if (saved) {
           setAppDataState({ ...INITIAL_STATE, ...saved });
         }
+        
+        // Load timer session from IndexedDB
+        let savedSession = await getData('focus-timer-session');
+        if (savedSession) {
+          setTimerSessionState(savedSession);
+        }
       } catch (e) {
         console.error('Falha ao carregar dados:', e);
       } finally {
@@ -246,7 +252,7 @@ const App: React.FC = () => {
             nextStopwatchTime = prev.stopwatchTimeLeft + deltaSeconds;
           }
 
-          return { 
+          const nextState = { 
             ...prev, 
             pomoTimeLeft: nextPomoTime, 
             pomoActive: nextPomoActive, 
@@ -254,6 +260,11 @@ const App: React.FC = () => {
             stopwatchTimeLeft: nextStopwatchTime,
             lastTick: now 
           };
+          
+          // Auto-save to IndexedDB every second when timer is active
+          saveData('focus-timer-session', nextState).catch(console.error);
+          
+          return nextState;
         });
       }, 500);
       return () => clearInterval(timerInterval);
