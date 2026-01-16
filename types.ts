@@ -41,6 +41,12 @@ export interface ReviewState {
   updatedAt: string; // ISO datetime
 }
 
+export interface ExamEvent {
+  id: string;
+  name: string;
+  date: string; // ISO datetime
+}
+
 export interface AppState {
   subjects: string[];
   subjectColors: Record<string, string>; // subject -> hex color
@@ -57,6 +63,7 @@ export interface AppState {
   settings: UserSettings;
   examDate?: string;
   examName?: string;
+  examEvents?: ExamEvent[]; // Array of exam events
 }
 
 export type TimerMode = 'pomodoro' | 'stopwatch';

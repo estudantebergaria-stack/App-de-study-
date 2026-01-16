@@ -41,7 +41,8 @@ const INITIAL_STATE: AppState = {
   unlockedAchievements: [],
   viewedAchievements: [],
   selectedAchievementId: undefined,
-  settings: { theme: 'dark', username: '', language: 'pt-BR', isTestMode: false, isEpicMode: false }
+  settings: { theme: 'dark', username: '', language: 'pt-BR', isTestMode: false, isEpicMode: false },
+  examEvents: []
 };
 
 const App: React.FC = () => {
@@ -698,7 +699,7 @@ const App: React.FC = () => {
                questionLogs: [...prev.questionLogs, { id: Date.now(), date: new Date().toISOString(), subject: sub, correct: log.correct, incorrect: log.incorrect }]
              }));
           }} theme={appData.settings.theme} t={t} />}
-          {activeTab === 'calendario' && <CalendarView logs={appData.logs} theme={appData.settings.theme} t={t} />}
+          {activeTab === 'calendario' && <CalendarView logs={appData.logs} reviewStates={appData.reviewStates} examEvents={appData.examEvents} theme={appData.settings.theme} t={t} />}
           {activeTab === 'weekly' && <WeeklyGoals subjects={appData.subjects} topics={appData.topics} logs={appData.logs} goals={appData.goals} topicGoals={appData.topicGoals || {}} onSetGoal={(sub, hrs) => setAppData(prev => ({ ...prev, goals: { ...prev.goals, [sub]: hrs } }))} onSetTopicGoal={(key, hrs) => setAppData(prev => ({ ...prev, topicGoals: { ...prev.topicGoals, [key]: hrs } }))} theme={appData.settings.theme} t={t} />}
           {activeTab === 'stats' && <Stats subjects={appData.subjects} logs={appData.logs} subjectColors={appData.subjectColors || {}} theme={appData.settings.theme} t={t} />}
           {activeTab === 'subjects_manage' && <ManageSubjectsView subjects={appData.subjects} topics={appData.topics} subjectColors={appData.subjectColors || {}} onAddSubject={addSubject} onDeleteSubject={deleteSubject} onRenameSubject={renameSubject} onSetColor={(s, c) => setAppData(prev => ({ ...prev, subjectColors: { ...prev.subjectColors, [s]: c } }))} onAddTopic={(s, tp) => setAppData(prev => ({ ...prev, topics: { ...prev.topics, [s]: [...(prev.topics[s] || []), tp] } }))} onDeleteTopic={(s, tp) => setAppData(prev => ({ ...prev, topics: { ...prev.topics, [s]: prev.topics[s].filter(t => t !== tp) } }))} onRenameTopic={renameTopic} theme={appData.settings.theme} t={t} />}

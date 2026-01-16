@@ -1,16 +1,18 @@
 
 import React, { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, X, Clock, Zap, BookOpen } from 'lucide-react';
-import { StudyLog } from '../types';
-import { formatTimeShort, toLocalISO } from '../utils';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, X, Clock, Zap, BookOpen, Target } from 'lucide-react';
+import { StudyLog, ReviewState, ExamEvent } from '../types';
+import { formatTimeShort, toLocalISO, parseTopicKey } from '../utils';
 
 interface CalendarViewProps {
   logs: StudyLog[];
+  reviewStates?: Record<string, ReviewState>;
+  examEvents?: ExamEvent[];
   theme?: 'dark' | 'light';
   t: any;
 }
 
-const CalendarView: React.FC<CalendarViewProps> = ({ logs, theme = 'dark', t }) => {
+const CalendarView: React.FC<CalendarViewProps> = ({ logs, reviewStates = {}, examEvents = [], theme = 'dark', t }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const isLight = theme === 'light';
@@ -51,9 +53,33 @@ const CalendarView: React.FC<CalendarViewProps> = ({ logs, theme = 'dark', t }) 
     });
   };
 
+  const getReviewsForDate = (date: Date) => {
+    const dateStr = toLocalISO(date);
+    return Object.entries(reviewStates).filter(([key, state]) => {
+      const dueDate = toLocalISO(new Date(state.dueAt));
+      return dueDate === dateStr;
+    });
+  };
+
+  const getExamsForDate = (date: Date) => {
+    const dateStr = toLocalISO(date);
+    return examEvents.filter(exam => {
+      const examDate = toLocalISO(new Date(exam.date));
+      return examDate === dateStr;
+    });
+  };
+
   const selectedDayLogs = useMemo(() => {
     return selectedDate ? getLogsForDate(selectedDate) : [];
   }, [selectedDate, logs]);
+
+  const selectedDayReviews = useMemo(() => {
+    return selectedDate ? getReviewsForDate(selectedDate) : [];
+  }, [selectedDate, reviewStates]);
+
+  const selectedDayExams = useMemo(() => {
+    return selectedDate ? getExamsForDate(selectedDate) : [];
+  }, [selectedDate, examEvents]);
 
   const weekDays = useMemo(() => {
     const baseDate = new Date(2021, 0, 4); 
@@ -114,8 +140,10 @@ const CalendarView: React.FC<CalendarViewProps> = ({ logs, theme = 'dark', t }) 
             if (!date) return <div key={`empty-${index}`} className={`aspect-square border-r border-b ${isLight ? 'bg-zinc-50/20 border-zinc-100' : 'bg-zinc-950/20 border-zinc-800/50'}`} />;
             
             const dayLogs = getLogsForDate(date);
+            const dayReviews = getReviewsForDate(date);
+            const dayExams = getExamsForDate(date);
             const isToday = toLocalISO(new Date()) === toLocalISO(date);
-            const hasActivity = dayLogs.length > 0;
+            const hasActivity = dayLogs.length > 0 || dayReviews.length > 0 || dayExams.length > 0;
             
             const uniqueSubjects = Array.from(new Set(dayLogs.map(l => l.subject)));
             const totalDuration = dayLogs.reduce((acc, curr) => acc + curr.duration, 0);
@@ -138,7 +166,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ logs, theme = 'dark', t }) 
                   `}>
                     {date.getDate()}
                   </span>
-                  {hasActivity && (
+                  {totalDuration > 0 && (
                     <span className="text-[10px] font-mono font-bold text-indigo-400 bg-indigo-500/10 px-1.5 py-0.5 rounded border border-indigo-500/20">
                       {formatTimeShort(totalDuration)}
                     </span>
@@ -146,16 +174,32 @@ const CalendarView: React.FC<CalendarViewProps> = ({ logs, theme = 'dark', t }) 
                 </div>
 
                 <div className="mt-1 flex flex-col gap-1 overflow-hidden w-full">
-                  {uniqueSubjects.slice(0, 2).map(sub => (
+                  {uniqueSubjects.slice(0, 1).map(sub => (
                     <div key={sub} className={`text-[9px] md:text-[10px] font-medium border px-1.5 py-0.5 rounded truncate ${
                       isLight ? 'text-zinc-600 bg-zinc-50 border-zinc-200/50' : 'text-zinc-300 bg-zinc-800/50 border-zinc-700/50'
                     }`}>
                       {sub}
                     </div>
                   ))}
-                  {uniqueSubjects.length > 2 && (
+                  {uniqueSubjects.length > 1 && (
                     <div className={`text-[9px] italic px-1 ${isLight ? 'text-zinc-400' : 'text-zinc-500'}`}>
-                      + {uniqueSubjects.length - 2} {t.locale === 'pt-BR' ? 'mais' : 'more'}
+                      + {uniqueSubjects.length - 1} {t.locale === 'pt-BR' ? 'mais' : 'more'}
+                    </div>
+                  )}
+                  
+                  {dayReviews.length > 0 && (
+                    <div className={`text-[9px] md:text-[10px] font-bold px-1.5 py-0.5 rounded border ${
+                      isLight ? 'text-amber-700 bg-amber-50 border-amber-200/50' : 'text-amber-400 bg-amber-500/10 border-amber-500/20'
+                    }`}>
+                      {t.reviewsLabel || 'Revisões'}: {dayReviews.length}
+                    </div>
+                  )}
+                  
+                  {dayExams.length > 0 && (
+                    <div className={`text-[9px] md:text-[10px] font-bold px-1.5 py-0.5 rounded border truncate ${
+                      isLight ? 'text-rose-700 bg-rose-50 border-rose-200/50' : 'text-rose-400 bg-rose-500/10 border-rose-500/20'
+                    }`}>
+                      {dayExams[0].name}{dayExams.length > 1 ? ` +${dayExams.length - 1}` : ''}
                     </div>
                   )}
                 </div>
@@ -212,10 +256,78 @@ const CalendarView: React.FC<CalendarViewProps> = ({ logs, theme = 'dark', t }) 
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4">
-              {selectedDayLogs.length > 0 ? (
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
+              {/* Exam Events Section */}
+              {selectedDayExams.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className={`text-sm font-black uppercase tracking-widest ${isLight ? 'text-zinc-500' : 'text-zinc-500'}`}>
+                    {t.examsLabel || 'Provas / Simulados'}
+                  </h3>
+                  {selectedDayExams.map((exam) => (
+                    <div 
+                      key={exam.id}
+                      className={`p-4 rounded-2xl border ${
+                        isLight ? 'bg-rose-50 border-rose-200' : 'bg-rose-900/20 border-rose-800/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-rose-500/10 rounded-lg">
+                          <Target size={20} className="text-rose-500" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className={`font-bold ${isLight ? 'text-rose-900' : 'text-rose-200'}`}>
+                            {exam.name}
+                          </h4>
+                          <p className={`text-xs font-medium ${isLight ? 'text-rose-600' : 'text-rose-400'}`}>
+                            {new Date(exam.date).toLocaleTimeString(t.locale, { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Review Items Section */}
+              {selectedDayReviews.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className={`text-sm font-black uppercase tracking-widest ${isLight ? 'text-zinc-500' : 'text-zinc-500'}`}>
+                    {t.reviewsLabel || 'Revisões'}
+                  </h3>
+                  {selectedDayReviews.map(([key, state]) => {
+                    const { subject, topic } = parseTopicKey(key);
+                    return (
+                      <div 
+                        key={key}
+                        className={`p-4 rounded-2xl border ${
+                          isLight ? 'bg-amber-50 border-amber-200' : 'bg-amber-900/20 border-amber-800/50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-amber-500/10 rounded-lg">
+                            <BookOpen size={20} className="text-amber-500" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className={`font-bold ${isLight ? 'text-amber-900' : 'text-amber-200'}`}>
+                              {topic}
+                            </h4>
+                            <p className={`text-xs font-medium ${isLight ? 'text-amber-600' : 'text-amber-400'}`}>
+                              {subject} • {state.reviewCount} {t.reviews || 'revisões'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Study Logs Section */}
+              {selectedDayLogs.length > 0 && (
                 <div className="space-y-4">
-                  {/* Summary by Subject -> Topic */}
+                  <h3 className={`text-sm font-black uppercase tracking-widest ${isLight ? 'text-zinc-500' : 'text-zinc-500'}`}>
+                    {t.breakdown || 'Detalhamento de Estudo'}
+                  </h3>
                   {(() => {
                     // Group by subject and topic
                     const grouped: Record<string, Record<string, { duration: number; count: number }>> = {};
@@ -233,11 +345,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ logs, theme = 'dark', t }) 
                     });
                     
                     return (
-                      <div className="space-y-4">
-                        <h3 className={`text-sm font-black uppercase tracking-widest ${isLight ? 'text-zinc-500' : 'text-zinc-500'}`}>
-                          {t.breakdown || 'Detalhamento'}
-                        </h3>
-                        
+                      <>
                         {Object.entries(grouped).map(([subject, topics]) => (
                           <div key={subject} className={`p-4 rounded-2xl border ${
                             isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/40 border-zinc-800'
@@ -276,21 +384,24 @@ const CalendarView: React.FC<CalendarViewProps> = ({ logs, theme = 'dark', t }) 
                             </div>
                           </div>
                         ))}
-                      </div>
+                        
+                        <div className={`pt-4 border-t flex justify-between items-center ${isLight ? 'border-zinc-200' : 'border-zinc-800'}`}>
+                          <span className={`text-xs font-black uppercase tracking-widest ${isLight ? 'text-zinc-400' : 'text-zinc-500'}`}>Total do Dia</span>
+                          <span className="text-xl font-black font-mono text-indigo-600">
+                            {formatTimeShort(selectedDayLogs.reduce((acc, curr) => acc + curr.duration, 0))}
+                          </span>
+                        </div>
+                      </>
                     );
                   })()}
-                  
-                  <div className={`mt-6 pt-6 border-t flex justify-between items-center ${isLight ? 'border-zinc-200' : 'border-zinc-800'}`}>
-                    <span className={`text-xs font-black uppercase tracking-widest ${isLight ? 'text-zinc-400' : 'text-zinc-500'}`}>Total do Dia</span>
-                    <span className="text-xl font-black font-mono text-indigo-600">
-                      {formatTimeShort(selectedDayLogs.reduce((acc, curr) => acc + curr.duration, 0))}
-                    </span>
-                  </div>
                 </div>
-              ) : (
+              )}
+
+              {/* Empty state */}
+              {selectedDayLogs.length === 0 && selectedDayReviews.length === 0 && selectedDayExams.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-12 text-center opacity-40 gap-4">
                   <Clock size={48} className="text-zinc-600" />
-                  <p className="font-bold text-xs uppercase tracking-widest">{t.noActivityToday}</p>
+                  <p className="font-bold text-xs uppercase tracking-widest">{t.noActivityToday || 'Nenhuma atividade neste dia'}</p>
                 </div>
               )}
             </div>
