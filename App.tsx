@@ -304,12 +304,16 @@ const App: React.FC = () => {
           let nextPomoActive = prev.pomoActive;
           let nextPomoState = prev.pomoState;
           let nextStopwatchTime = prev.stopwatchTimeLeft;
+          let shouldUpdateReviewState = false;
 
           if (prev.pomoActive) {
             nextPomoTime = prev.pomoTimeLeft - deltaSeconds;
             if (nextPomoTime <= 0) {
               if (prev.pomoState === 'work') {
                 if (endSoundRef.current) endSoundRef.current.play().catch(() => {});
+                
+                // Mark that we should update review state when work phase ends
+                shouldUpdateReviewState = true;
               } else {
                 if (breakEndSoundRef.current) breakEndSoundRef.current.play().catch(() => {});
               }
@@ -339,6 +343,16 @@ const App: React.FC = () => {
             lastTick: now 
           };
           
+          // Update review state when Pomodoro work session completes
+          if (shouldUpdateReviewState && prev.topic && prev.topic.trim()) {
+            const correct = parseInt(prev.sessionCorrect as string) || 0;
+            const incorrect = parseInt(prev.sessionIncorrect as string) || 0;
+            const sub = prev.subject || appData.subjects[0];
+            
+            // Call the review state update function
+            updateReviewStateForTopic(sub, prev.topic, correct, incorrect);
+          }
+          
           // Auto-save to IndexedDB every 2 seconds to reduce database writes
           // Only save if at least 2 seconds have passed since last save
           const timeSinceLastSave = now - lastSaveRef.current;
@@ -352,7 +366,7 @@ const App: React.FC = () => {
       }, 500);
       return () => clearInterval(timerInterval);
     }
-  }, [timerSession.pomoActive, timerSession.stopwatchActive, setTimerSession]);
+  }, [timerSession.pomoActive, timerSession.stopwatchActive, setTimerSession, updateReviewStateForTopic, appData.subjects]);
 
   const t = useMemo(() => TRANSLATIONS[appData.settings.language || 'pt-BR'], [appData.settings.language]);
 
@@ -398,6 +412,71 @@ const App: React.FC = () => {
     }));
   }, [setAppData]);
 
+  /**
+   * Updates the review state for a topic based on session data.
+   * This function is called whenever a study session ends (manual save or automatic completion).
+   */
+  const updateReviewStateForTopic = useCallback((
+    subject: string,
+    topic: string,
+    correct: number,
+    incorrect: number
+  ) => {
+    if (!topic || !topic.trim()) {
+      return;
+    }
+    
+    const topicKey = createTopicKey(subject, topic);
+    
+    setAppData(prev => {
+      const currentReviewState = prev.reviewStates?.[topicKey] || {
+        reviewCount: 0,
+        correctTotal: 0,
+        incorrectTotal: 0,
+        dueAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      // Update totals if questions were answered
+      const newCorrectTotal = currentReviewState.correctTotal + correct;
+      const newIncorrectTotal = currentReviewState.incorrectTotal + incorrect;
+      
+      // Calculate accuracy
+      const totalQuestions = newCorrectTotal + newIncorrectTotal;
+      const accuracy = totalQuestions > 0 ? newCorrectTotal / totalQuestions : 1.0;
+      
+      // Reset logic: if accuracy < 40%, reset reviewCount to 1
+      let newReviewCount;
+      if (accuracy < 0.4) {
+        newReviewCount = 1;
+      } else {
+        newReviewCount = currentReviewState.reviewCount + 1;
+      }
+      
+      // Calculate next review date
+      const baseInterval = getBaseInterval(newReviewCount);
+      const difficultyMult = getDifficultyMultiplier(accuracy);
+      const intervalDays = Math.max(1, Math.round(baseInterval * difficultyMult));
+      
+      const nextReviewDate = new Date();
+      nextReviewDate.setDate(nextReviewDate.getDate() + intervalDays);
+      
+      return {
+        ...prev,
+        reviewStates: {
+          ...prev.reviewStates,
+          [topicKey]: {
+            reviewCount: newReviewCount,
+            correctTotal: newCorrectTotal,
+            incorrectTotal: newIncorrectTotal,
+            dueAt: nextReviewDate.toISOString(),
+            updatedAt: new Date().toISOString()
+          }
+        }
+      };
+    });
+  }, [setAppData]);
+
   const saveTimerSession = useCallback(() => {
     const { mode, pomoPreset, pomoState, pomoTimeLeft, stopwatchTimeLeft, subject, topic, sessionCorrect, sessionIncorrect } = timerSession;
     
@@ -441,60 +520,8 @@ const App: React.FC = () => {
       }
       
       // Update review state for topic if present
-      if (topic && topic.trim()) {
-        const sub = subject || appData.subjects[0];
-        const topicKey = createTopicKey(sub, topic);
-        const correct = parseInt(sessionCorrect as string) || 0;
-        const incorrect = parseInt(sessionIncorrect as string) || 0;
-        
-        setAppData(prev => {
-          const currentReviewState = prev.reviewStates?.[topicKey] || {
-            reviewCount: 0,
-            correctTotal: 0,
-            incorrectTotal: 0,
-            dueAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          };
-          
-          // Update totals if questions were answered
-          const newCorrectTotal = currentReviewState.correctTotal + correct;
-          const newIncorrectTotal = currentReviewState.incorrectTotal + incorrect;
-          
-          // Calculate accuracy
-          const totalQuestions = newCorrectTotal + newIncorrectTotal;
-          const accuracy = totalQuestions > 0 ? newCorrectTotal / totalQuestions : 1.0;
-          
-          // Reset logic: if accuracy < 40%, reset reviewCount to 1
-          let newReviewCount;
-          if (accuracy < 0.4) {
-            newReviewCount = 1;
-          } else {
-            newReviewCount = currentReviewState.reviewCount + 1;
-          }
-          
-          // Calculate next review date
-          const baseInterval = getBaseInterval(newReviewCount);
-          const difficultyMult = getDifficultyMultiplier(accuracy);
-          const intervalDays = Math.max(1, Math.round(baseInterval * difficultyMult));
-          
-          const nextReviewDate = new Date();
-          nextReviewDate.setDate(nextReviewDate.getDate() + intervalDays);
-          
-          return {
-            ...prev,
-            reviewStates: {
-              ...prev.reviewStates,
-              [topicKey]: {
-                reviewCount: newReviewCount,
-                correctTotal: newCorrectTotal,
-                incorrectTotal: newIncorrectTotal,
-                dueAt: nextReviewDate.toISOString(),
-                updatedAt: new Date().toISOString()
-              }
-            }
-          };
-        });
-      }
+      const sub = subject || appData.subjects[0];
+      updateReviewStateForTopic(sub, topic, correct, incorrect);
     }
 
     setTimerSession(prev => {
@@ -519,7 +546,7 @@ const App: React.FC = () => {
         };
       }
     });
-  }, [timerSession, addLog, setAppData, appData.subjects, setTimerSession, appData.questions, appData.questionLogs]);
+  }, [timerSession, addLog, setAppData, appData.subjects, setTimerSession, appData.questions, updateReviewStateForTopic]);
 
   const startBreakSession = useCallback(() => {
     if (breakStartSoundRef.current) breakStartSoundRef.current.play().catch(() => {});
@@ -533,6 +560,14 @@ const App: React.FC = () => {
       type: 'Pomodoro'
     });
 
+    // Update review state when starting a break (work session completed)
+    if (timerSession.topic && timerSession.topic.trim()) {
+      const correct = parseInt(timerSession.sessionCorrect as string) || 0;
+      const incorrect = parseInt(timerSession.sessionIncorrect as string) || 0;
+      const sub = timerSession.subject || appData.subjects[0];
+      updateReviewStateForTopic(sub, timerSession.topic, correct, incorrect);
+    }
+
     setTimerSession(prev => ({
       ...prev,
       pomoState: 'break',
@@ -540,7 +575,7 @@ const App: React.FC = () => {
       pomoActive: true,
       lastTick: Date.now()
     }));
-  }, [timerSession, addLog, appData.subjects, setTimerSession]);
+  }, [timerSession, addLog, appData.subjects, setTimerSession, updateReviewStateForTopic]);
 
   const addSubject = (name: string) => {
     const trimmed = name.trim();
