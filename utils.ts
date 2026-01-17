@@ -368,8 +368,8 @@ export const generateDailyMissions = (
 export interface LevelInfo {
   level: number;
   name: string;
-  xpRequired: number; // Total XP needed to reach this level
-  xpForNext: number; // XP needed to reach next level
+  xpRequired: number; // Total XP needed to reach this level (from level 1)
+  xpForNext: number; // Remaining XP needed to reach the next level
 }
 
 export const LEVEL_NAMES = [
@@ -448,7 +448,9 @@ export const calculateSessionXP = (
   if (continuousMinutes > 90) {
     const excessMinutes = continuousMinutes - 90;
     const penaltyFactor = Math.max(0.3, 1 - (excessMinutes / 180)); // Down to 30% after 180 additional minutes
-    effectiveMinutes = 90 + (minutes - Math.max(0, minutes - excessMinutes)) * penaltyFactor;
+    // Apply full rate to first 90 minutes, then penalized rate to excess
+    const currentSessionExcess = Math.min(minutes, Math.max(0, continuousMinutes - 90 + minutes) - (continuousMinutes - 90));
+    effectiveMinutes = (minutes - currentSessionExcess) + (currentSessionExcess * penaltyFactor);
   }
   
   const xp = Math.floor(effectiveMinutes * baseRate * streakMultiplier);

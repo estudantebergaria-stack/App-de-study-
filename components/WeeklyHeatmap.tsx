@@ -82,7 +82,7 @@ const WeeklyHeatmap: React.FC<WeeklyHeatmapProps> = ({
                 <div 
                   className={`w-14 h-14 rounded-xl border-2 transition-all duration-300 flex items-center justify-center ${
                     getIntensityColor(minutes)
-                  } ${meetsGoal ? 'ring-2 ring-emerald-500 ring-offset-2 ring-offset-zinc-900' : ''}`}
+                  } ${meetsGoal ? `ring-2 ring-emerald-500 ring-offset-2 ${isLight ? 'ring-offset-white' : 'ring-offset-zinc-900'}` : ''}`}
                 >
                   <span className={`text-xs font-bold ${
                     minutes === 0 
@@ -121,7 +121,7 @@ const WeeklyHeatmap: React.FC<WeeklyHeatmapProps> = ({
       </div>
 
       {/* Legend */}
-      <div className="mt-6 pt-6 border-t border-zinc-700/30">
+      <div className={`mt-6 pt-6 border-t ${isLight ? 'border-zinc-200' : 'border-zinc-700/30'}`}>
         <div className="flex items-center justify-between text-xs">
           <div className={isLight ? 'text-zinc-600' : 'text-zinc-400'}>
             Meta diária: <span className="font-bold">{dailyGoal} min</span>

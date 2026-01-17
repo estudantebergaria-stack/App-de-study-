@@ -140,7 +140,7 @@ const DailyMissionsCard: React.FC<DailyMissionsCardProps> = ({
 
       {/* Progress Summary */}
       {totalCount > 0 && (
-        <div className="mt-6 pt-6 border-t border-zinc-700/30">
+        <div className={`mt-6 pt-6 border-t ${isLight ? 'border-zinc-200' : 'border-zinc-700/30'}`}>
           <div className={`h-2 rounded-full overflow-hidden ${
             isLight ? 'bg-zinc-200' : 'bg-zinc-700'
           }`}>
