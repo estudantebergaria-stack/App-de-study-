@@ -423,4 +423,5 @@ const CalendarView: React.FC<CalendarViewProps> = ({ logs, reviewStates = {}, ex
   );
 };
 
-export default CalendarView;
+// Memoize component to prevent unnecessary re-renders
+export default React.memo(CalendarView);

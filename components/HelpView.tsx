@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { HelpCircle, ChevronDown, ChevronUp, BookOpen, ShieldCheck, Zap, Database } from 'lucide-react';
+import { HelpCircle, ChevronDown, ChevronUp, BookOpen, ShieldCheck, Zap, Database, Keyboard } from 'lucide-react';
 
 interface HelpViewProps {
   theme: 'dark' | 'light';
@@ -13,6 +13,14 @@ const HelpView: React.FC<HelpViewProps> = ({ theme, t }) => {
 
   const faqs = t.faqs || [];
 
+  // Keyboard shortcuts info
+  const keyboardShortcuts = [
+    { keys: 'Ctrl + D', description: 'Go to Dashboard', action: 'Navegar para o Dashboard' },
+    { keys: 'Ctrl + F', description: 'Go to Focus Timer', action: 'Abrir Temporizador de Foco' },
+    { keys: 'Ctrl + S', description: 'Go to Statistics', action: 'Ver Estatísticas' },
+    { keys: 'Ctrl + R', description: 'Go to Review', action: 'Ir para Revisões' },
+  ];
+
   return (
     <div className="max-w-4xl mx-auto space-y-10 animate-fade-in pb-20">
       <div className="flex flex-col gap-2">
@@ -23,6 +31,48 @@ const HelpView: React.FC<HelpViewProps> = ({ theme, t }) => {
           <h1 className={`text-3xl font-black ${isLight ? 'text-slate-900' : 'text-white'}`}>{t.help}</h1>
         </div>
         <p className={`${isLight ? 'text-slate-500' : 'text-zinc-500'} font-medium`}>{t.readyToStudy}</p>
+      </div>
+
+      {/* Keyboard Shortcuts Section */}
+      <div className={`p-8 rounded-3xl border-2 transition-all duration-700 ${
+        isLight 
+          ? 'bg-white border-indigo-100 shadow-xl' 
+          : 'bg-[#09090b] border-indigo-500/20 shadow-[0_0_50px_rgba(99,102,241,0.05)]'
+      }`}>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center">
+            <Keyboard size={24} className="text-indigo-500" />
+          </div>
+          <h2 className={`text-xl font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+            Atalhos de Teclado
+          </h2>
+        </div>
+        <div className="grid gap-3">
+          {keyboardShortcuts.map((shortcut, idx) => (
+            <div 
+              key={idx} 
+              className={`flex items-center justify-between p-4 rounded-xl transition-colors ${
+                isLight 
+                  ? 'bg-slate-50 hover:bg-slate-100' 
+                  : 'bg-zinc-800/30 hover:bg-zinc-800/50'
+              }`}
+            >
+              <span className={`text-sm font-medium ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
+                {shortcut.action}
+              </span>
+              <kbd className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold ${
+                isLight 
+                  ? 'bg-white border border-slate-200 text-slate-700 shadow-sm' 
+                  : 'bg-zinc-900 border border-zinc-700 text-zinc-300 shadow-md'
+              }`}>
+                {shortcut.keys}
+              </kbd>
+            </div>
+          ))}
+        </div>
+        <p className={`mt-4 text-xs ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>
+          💡 Dica: Os atalhos funcionam em qualquer lugar do app, exceto quando você está digitando em campos de texto.
+        </p>
       </div>
 
       <div className="space-y-4">

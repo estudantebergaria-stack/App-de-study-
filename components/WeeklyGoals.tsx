@@ -369,4 +369,5 @@ const WeeklyGoals: React.FC<WeeklyGoalsProps> = ({
   );
 };
 
-export default WeeklyGoals;
+// Memoize component to prevent unnecessary re-renders
+export default React.memo(WeeklyGoals);

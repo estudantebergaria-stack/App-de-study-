@@ -19,6 +19,7 @@ import ManageSubjectsView from './components/ManageSubjectsView';
 import ReviewView from './components/ReviewView';
 import ThemeColorUpdater from './components/ThemeColorUpdater';
 import Toast, { ToastType } from './components/Toast';
+import ErrorBoundary from './components/ErrorBoundary';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { TRANSLATIONS } from './translations';
 import { ACHIEVEMENTS } from './constants/achievements';
@@ -1019,7 +1020,8 @@ const App: React.FC = () => {
       />
 
       <main className={`flex-1 overflow-y-auto custom-scrollbar relative pt-16 md:pt-0 transition-all duration-700`}>
-        <div className="p-6 md:p-10 max-w-7xl mx-auto w-full h-full relative z-10">
+        <ErrorBoundary>
+          <div className="p-6 md:p-10 max-w-7xl mx-auto w-full h-full relative z-10">
           {activeTab === 'dashboard' && (
             <Dashboard 
               logs={appData.logs} 
@@ -1118,6 +1120,7 @@ const App: React.FC = () => {
           {activeTab === 'ajuda' && <HelpView theme={appData.settings.theme} t={t} />}
           {activeTab === 'settings' && <Settings settings={appData.settings} onUpdate={(s) => setAppData(prev => ({ ...prev, settings: { ...prev.settings, ...s } }))} theme={appData.settings.theme} appState={appData} onExport={handleExport} onImport={handleImport} onReset={() => setAppData(() => INITIAL_STATE)} onUnlockAll={unlockAllAchievements} onGenerateTestData={generateTestData} onGenerateAdaptiveRecoveryTestData={generateAdaptiveRecoveryTestData} t={t} />}
         </div>
+        </ErrorBoundary>
       </main>
       
       {/* Toast Notification */}
