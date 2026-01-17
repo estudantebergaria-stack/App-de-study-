@@ -106,20 +106,45 @@ const App: React.FC = () => {
             typeof savedSession.pomoPreset === 'number' &&
             typeof savedSession.lastTick === 'number'
           ) {
+            const now = Date.now();
+            const elapsedSeconds = Math.floor((now - savedSession.lastTick) / 1000);
+            
+            // Calculate new time values based on elapsed time while app was closed
+            let newPomoTimeLeft = savedSession.pomoTimeLeft || 50 * 60;
+            let newStopwatchTimeLeft = savedSession.stopwatchTimeLeft || 0;
+            let newPomoActive = savedSession.pomoActive || false;
+            let newStopwatchActive = savedSession.stopwatchActive || false;
+            let newPomoState = savedSession.pomoState || 'work';
+            
+            // If timer was active when app was closed, calculate elapsed time
+            if (savedSession.pomoActive) {
+              // Pomodoro mode: subtract elapsed time from timer
+              newPomoTimeLeft = Math.max(0, savedSession.pomoTimeLeft - elapsedSeconds);
+              // If time ran out while app was closed, stop the timer
+              if (newPomoTimeLeft === 0) {
+                newPomoActive = false;
+                // Note: We don't auto-transition between work/break when app was closed
+                // User will need to manually start the next phase
+              }
+            } else if (savedSession.stopwatchActive) {
+              // Stopwatch mode: add elapsed time
+              newStopwatchTimeLeft = savedSession.stopwatchTimeLeft + elapsedSeconds;
+            }
+            
             setTimerSessionState({
               mode: savedSession.mode || 'pomodoro',
               pomoPreset: savedSession.pomoPreset || 50,
               breakPreset: savedSession.breakPreset || 10,
-              pomoActive: savedSession.pomoActive || false,
-              pomoTimeLeft: savedSession.pomoTimeLeft || 50 * 60,
-              pomoState: savedSession.pomoState || 'work',
-              stopwatchActive: savedSession.stopwatchActive || false,
-              stopwatchTimeLeft: savedSession.stopwatchTimeLeft || 0,
+              pomoActive: newPomoActive,
+              pomoTimeLeft: newPomoTimeLeft,
+              pomoState: newPomoState,
+              stopwatchActive: newStopwatchActive,
+              stopwatchTimeLeft: newStopwatchTimeLeft,
               subject: savedSession.subject || '',
               topic: savedSession.topic || '',
               sessionCorrect: savedSession.sessionCorrect || '',
               sessionIncorrect: savedSession.sessionIncorrect || '',
-              lastTick: Date.now() // Reset lastTick to current time
+              lastTick: now // Update lastTick to current time for future calculations
             });
           }
         }
