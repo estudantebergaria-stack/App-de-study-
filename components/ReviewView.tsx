@@ -360,4 +360,5 @@ const ReviewView: React.FC<ReviewViewProps> = ({ reviewStates, theme = 'dark', t
   );
 };
 
-export default ReviewView;
+// Memoize component to prevent unnecessary re-renders
+export default React.memo(ReviewView);

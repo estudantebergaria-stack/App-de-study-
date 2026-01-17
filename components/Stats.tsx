@@ -503,4 +503,5 @@ const Stats: React.FC<StatsProps> = ({ subjects, logs, subjectColors, reviewStat
   );
 };
 
-export default Stats;
+// Memoize component to prevent unnecessary re-renders
+export default React.memo(Stats);

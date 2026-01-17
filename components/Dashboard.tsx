@@ -287,4 +287,5 @@ const Dashboard: React.FC<DashboardProps> = ({
   );
 };
 
-export default Dashboard;
+// Memoize component to prevent unnecessary re-renders
+export default React.memo(Dashboard);
