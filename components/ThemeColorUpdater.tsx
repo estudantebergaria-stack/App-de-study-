@@ -4,18 +4,6 @@ interface ThemeColorUpdaterProps {
   theme: string;
 }
 
-// Theme color mapping for solid colors
-const THEME_COLORS: Record<string, string> = {
-  'dark': '#09090b',
-  'light': '#f4f4f5',
-  'neon-purple': '#1a0a2e',
-  'neon-blue': '#0a192f',
-  'neon-green': '#0a2e1a',
-  'neon-pink': '#2e0a1e',
-  'elite': '#0f0f0f',
-  'mestre': '#1c1c1c'
-};
-
 // Theme background mapping (includes gradients)
 const THEME_BACKGROUNDS: Record<string, string> = {
   'dark': '#09090b',
@@ -38,9 +26,8 @@ const ThemeColorUpdater: React.FC<ThemeColorUpdaterProps> = ({ theme }) => {
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
     
     if (metaThemeColor) {
-      // Update the theme color based on current theme
-      const color = THEME_COLORS[theme] || THEME_COLORS['dark'];
-      metaThemeColor.setAttribute('content', color);
+      // Always use dark color for the browser/system bar regardless of theme
+      metaThemeColor.setAttribute('content', '#09090b');
     }
 
     // Update html and body background colors
