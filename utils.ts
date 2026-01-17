@@ -177,3 +177,186 @@ export const isEliteThemeUnlocked = (logs: StudyLog[]): boolean => {
 export const isMestreThemeUnlocked = (logs: StudyLog[]): boolean => {
   return calculateStreak(logs) >= 30;
 };
+
+/**
+ * Calculates a subject score (0-100) based on three dimensions:
+ * - Focus: Weekly time vs goal
+ * - Review: Time since last review vs ideal interval
+ * - Consistency: Days studied this week
+ */
+export interface SubjectScore {
+  subject: string;
+  overall: number; // 0-100
+  focus: number; // 0-100
+  review: number; // 0-100
+  consistency: number; // 0-100
+  weeklyMinutes: number;
+  goalMinutes: number;
+  daysSinceLastStudy: number;
+  daysStudiedThisWeek: number;
+}
+
+export const calculateSubjectScore = (
+  subject: string,
+  logs: StudyLog[],
+  goals: Record<string, number>,
+  reviewStates?: Record<string, any>
+): SubjectScore => {
+  const today = getTodayISO();
+  const { start, end } = getWeekRange();
+  
+  // Get logs for this subject this week
+  const weekLogs = logs.filter(l => 
+    l.subject === subject && 
+    l.date >= start && 
+    l.date <= end
+  );
+  
+  const weeklyMinutes = weekLogs.reduce((acc, l) => acc + l.duration, 0) / 60;
+  const goalMinutes = (goals[subject] || 0) * 60; // Convert hours to minutes
+  
+  // Focus score: weekly time vs goal
+  let focusScore = 0;
+  if (goalMinutes > 0) {
+    focusScore = Math.min(100, (weeklyMinutes / goalMinutes) * 100);
+  } else {
+    // If no goal set, give partial credit if studied at all
+    focusScore = weeklyMinutes > 0 ? 50 : 0;
+  }
+  
+  // Consistency score: days studied this week (max 7)
+  const daysStudiedThisWeek = new Set(
+    weekLogs.map(l => toLocalISO(new Date(l.date)))
+  ).size;
+  const consistencyScore = (daysStudiedThisWeek / 7) * 100;
+  
+  // Review score: how recently studied (inverse of days since last study)
+  const subjectLogs = logs.filter(l => l.subject === subject);
+  let daysSinceLastStudy = 999;
+  let reviewScore = 0;
+  
+  if (subjectLogs.length > 0) {
+    const lastLog = subjectLogs.reduce((latest, log) => 
+      log.date > latest.date ? log : latest
+    );
+    daysSinceLastStudy = daysBetween(toLocalISO(new Date(lastLog.date)), today);
+    
+    // Ideal is to study every day (0 days since), worst is 14+ days
+    reviewScore = Math.max(0, 100 - (daysSinceLastStudy * 7));
+  }
+  
+  // Overall score: weighted average
+  const overall = (focusScore * 0.4 + reviewScore * 0.3 + consistencyScore * 0.3);
+  
+  return {
+    subject,
+    overall: Math.round(overall),
+    focus: Math.round(focusScore),
+    review: Math.round(reviewScore),
+    consistency: Math.round(consistencyScore),
+    weeklyMinutes: Math.round(weeklyMinutes),
+    goalMinutes: Math.round(goalMinutes),
+    daysSinceLastStudy,
+    daysStudiedThisWeek
+  };
+};
+
+/**
+ * Gets the week's study days as a 7-element array (Mon-Sun)
+ * where each element is the minutes studied that day
+ */
+export const getWeekHeatmapData = (logs: StudyLog[]): number[] => {
+  const { start } = getWeekRange();
+  const weekData = new Array(7).fill(0);
+  
+  const startDate = new Date(start.replace(/-/g, '/'));
+  
+  logs.forEach(log => {
+    const logDate = new Date(log.date);
+    const daysDiff = Math.floor((logDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysDiff >= 0 && daysDiff < 7) {
+      weekData[daysDiff] += log.duration / 60; // Convert to minutes
+    }
+  });
+  
+  return weekData;
+};
+
+/**
+ * Generates daily missions based on subject scores
+ */
+export interface DailyMission {
+  id: string;
+  type: 'study' | 'review' | 'complete_goal';
+  subject: string;
+  title: string;
+  description: string;
+  targetMinutes: number;
+  xpReward: number;
+}
+
+export const generateDailyMissions = (
+  subjects: string[],
+  logs: StudyLog[],
+  goals: Record<string, number>
+): DailyMission[] => {
+  const missions: DailyMission[] = [];
+  const scores = subjects.map(s => calculateSubjectScore(s, logs, goals));
+  
+  // Find most neglected subject (lowest review score)
+  const mostNeglected = [...scores].sort((a, b) => a.review - b.review)[0];
+  if (mostNeglected && mostNeglected.daysSinceLastStudy > 2) {
+    missions.push({
+      id: `review-${mostNeglected.subject}`,
+      type: 'review',
+      subject: mostNeglected.subject,
+      title: `Revisar ${mostNeglected.subject}`,
+      description: `Sem revisão há ${mostNeglected.daysSinceLastStudy} dias`,
+      targetMinutes: 10,
+      xpReward: 150
+    });
+  }
+  
+  // Find subject furthest from weekly goal
+  const furthestFromGoal = [...scores]
+    .filter(s => s.goalMinutes > 0)
+    .sort((a, b) => {
+      const aDiff = a.goalMinutes - a.weeklyMinutes;
+      const bDiff = b.goalMinutes - b.weeklyMinutes;
+      return bDiff - aDiff;
+    })[0];
+  
+  if (furthestFromGoal && furthestFromGoal.weeklyMinutes < furthestFromGoal.goalMinutes) {
+    const remaining = furthestFromGoal.goalMinutes - furthestFromGoal.weeklyMinutes;
+    missions.push({
+      id: `goal-${furthestFromGoal.subject}`,
+      type: 'study',
+      subject: furthestFromGoal.subject,
+      title: `Estudar ${furthestFromGoal.subject}`,
+      description: `Abaixo da meta semanal (${Math.round(furthestFromGoal.weeklyMinutes)}/${furthestFromGoal.goalMinutes} min)`,
+      targetMinutes: Math.min(25, Math.round(remaining)),
+      xpReward: 200
+    });
+  }
+  
+  // Add a daily completion mission
+  const today = getTodayISO();
+  const todayLogs = logs.filter(l => toLocalISO(new Date(l.date)) === today);
+  const todayMinutes = todayLogs.reduce((acc, l) => acc + l.duration, 0) / 60;
+  const dailyGoal = 45; // Default daily goal
+  
+  if (todayMinutes < dailyGoal) {
+    missions.push({
+      id: 'daily-complete',
+      type: 'complete_goal',
+      subject: '',
+      title: `Completar ${dailyGoal} min hoje`,
+      description: `Você está a ${Math.round(dailyGoal - todayMinutes)} min da meta diária`,
+      targetMinutes: dailyGoal,
+      xpReward: 250
+    });
+  }
+  
+  return missions.slice(0, 3); // Return max 3 missions
+};

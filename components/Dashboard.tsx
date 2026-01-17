@@ -2,7 +2,10 @@
 import React from 'react';
 import { Clock, Activity, Flame, Layout } from 'lucide-react';
 import { StudyLog, QuestionData } from '../types';
-import { formatTime, formatTimeShort, getTodayISO, toLocalISO, calculateStreak } from '../utils';
+import { formatTime, formatTimeShort, getTodayISO, toLocalISO, calculateStreak, calculateSubjectScore, generateDailyMissions, getWeekHeatmapData } from '../utils';
+import NextBestActionCard from './NextBestActionCard';
+import SubjectDiagnostics from './SubjectDiagnostics';
+import WeeklyHeatmap from './WeeklyHeatmap';
 
 interface DashboardProps {
   logs: StudyLog[];
@@ -11,9 +14,20 @@ interface DashboardProps {
   username?: string;
   theme?: 'dark' | 'light';
   t: any;
+  goals?: Record<string, number>;
+  onStartSession?: (subject: string, minutes: number) => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ logs, subjects, questions = {}, username = 'Usuário', theme = 'dark', t }) => {
+const Dashboard: React.FC<DashboardProps> = ({ 
+  logs, 
+  subjects, 
+  questions = {}, 
+  username = 'Usuário', 
+  theme = 'dark', 
+  t,
+  goals = {},
+  onStartSession 
+}) => {
   const today = getTodayISO();
   const logsToday = logs.filter(l => toLocalISO(new Date(l.date)) === today);
   const totalSecToday = logsToday.reduce((a, b) => a + b.duration, 0);
@@ -51,8 +65,35 @@ const Dashboard: React.FC<DashboardProps> = ({ logs, subjects, questions = {}, u
     return result;
   }, [recentLogs]);
 
+  // Calculate subject scores for diagnostics
+  const subjectScores = React.useMemo(() => {
+    return subjects.map(subject => calculateSubjectScore(subject, logs, goals));
+  }, [subjects, logs, goals]);
+
+  // Generate daily missions
+  const dailyMissions = React.useMemo(() => {
+    return generateDailyMissions(subjects, logs, goals);
+  }, [subjects, logs, goals]);
+
+  // Get week heatmap data
+  const weekHeatmapData = React.useMemo(() => {
+    return getWeekHeatmapData(logs);
+  }, [logs]);
+
+  const handleStartSession = (subject: string, minutes: number) => {
+    if (onStartSession) {
+      onStartSession(subject, minutes);
+    }
+  };
+
+  const handleDiagnosticAction = (subject: string, action: 'study' | 'review') => {
+    const minutes = action === 'study' ? 25 : 10;
+    handleStartSession(subject, minutes);
+  };
+
   return (
     <div className="space-y-8 animate-fade-in">
+      {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-3">
@@ -83,6 +124,36 @@ const Dashboard: React.FC<DashboardProps> = ({ logs, subjects, questions = {}, u
         )}
       </div>
 
+      {/* New Diagnostic Features - Week 1 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Next Best Action Card */}
+        <NextBestActionCard
+          missions={dailyMissions}
+          onStartSession={handleStartSession}
+          theme={theme}
+          t={t}
+        />
+
+        {/* Weekly Heatmap */}
+        <WeeklyHeatmap
+          weekData={weekHeatmapData}
+          dailyGoal={30}
+          theme={theme}
+          t={t}
+        />
+      </div>
+
+      {/* Subject Diagnostics */}
+      {subjects.length > 0 && (
+        <SubjectDiagnostics
+          scores={subjectScores}
+          theme={theme}
+          t={t}
+          onActionClick={handleDiagnosticAction}
+        />
+      )}
+
+      {/* Original Dashboard Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className={`p-8 rounded-[2.5rem] flex flex-col items-center justify-center text-center shadow-2xl transition-all duration-500 border ${
           isLight ? 'bg-white border-zinc-200 shadow-zinc-300/20' : 'glass-panel bg-gradient-to-br from-indigo-600/5 to-transparent'

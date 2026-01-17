@@ -959,7 +959,27 @@ const App: React.FC = () => {
       <main className={`flex-1 overflow-y-auto custom-scrollbar relative pt-16 md:pt-0 transition-all duration-700`}>
         <div className="p-6 md:p-10 max-w-7xl mx-auto w-full h-full relative z-10">
           {activeTab === 'dashboard' && (
-            <Dashboard logs={appData.logs} subjects={appData.subjects} questions={appData.questions} username={appData.settings.username} theme={appData.settings.theme} t={t} />
+            <Dashboard 
+              logs={appData.logs} 
+              subjects={appData.subjects} 
+              questions={appData.questions} 
+              username={appData.settings.username} 
+              theme={appData.settings.theme} 
+              t={t}
+              goals={appData.goals}
+              onStartSession={(subject, minutes) => {
+                // Switch to focus tab and set up timer
+                setActiveTab('focus');
+                setTimerSession(prev => ({
+                  ...prev,
+                  subject,
+                  mode: 'pomodoro',
+                  pomoPreset: minutes,
+                  pomoTimeLeft: minutes * 60,
+                  pomoState: 'work'
+                }));
+              }}
+            />
           )}
           {activeTab === 'focus' && (
             <FocusTimer 
