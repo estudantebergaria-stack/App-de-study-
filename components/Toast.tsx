@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { CheckCircle, AlertCircle, Info, X } from 'lucide-react';
 
 export type ToastType = 'success' | 'error' | 'info';
@@ -19,10 +19,19 @@ const Toast: React.FC<ToastProps> = ({
   onClose,
   theme = 'dark'
 }) => {
+  const onCloseRef = useRef(onClose);
+  
+  // Update ref when onClose changes
   useEffect(() => {
-    const timer = setTimeout(onClose, duration);
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onCloseRef.current();
+    }, duration);
     return () => clearTimeout(timer);
-  }, [duration, onClose]);
+  }, [duration]);
 
   const icons = {
     success: CheckCircle,
