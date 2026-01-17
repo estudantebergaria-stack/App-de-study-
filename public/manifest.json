@@ -38,7 +38,7 @@
       "name": "Criar Novo Card",
       "short_name": "Novo Card",
       "description": "Criar um novo card de estudo",
-      "url": "/new-card",
+      "url": "/",
       "icons": [
         {
           "src": "/icons/icon-192x192.png",
