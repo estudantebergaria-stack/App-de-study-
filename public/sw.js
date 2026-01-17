@@ -50,6 +50,17 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Cacheable file extensions
+  const CACHEABLE_EXTENSIONS = new Set([
+    '.js', '.css', '.png', '.jpg', '.jpeg', 
+    '.svg', '.gif', '.webp', '.woff', '.woff2', '.ttf'
+  ]);
+
+  // Helper to check if URL should be cached
+  const shouldCache = (pathname) => {
+    return Array.from(CACHEABLE_EXTENSIONS).some(ext => pathname.endsWith(ext));
+  };
+
   // Cache-First strategy for all requests
   event.respondWith(
     caches.match(request)
@@ -71,22 +82,10 @@ self.addEventListener('fetch', (event) => {
             const responseToCache = networkResponse.clone();
 
             // Cache dynamic resources (JS, CSS, images, fonts)
-            if (
-              url.pathname.endsWith('.js') ||
-              url.pathname.endsWith('.css') ||
-              url.pathname.endsWith('.png') ||
-              url.pathname.endsWith('.jpg') ||
-              url.pathname.endsWith('.jpeg') ||
-              url.pathname.endsWith('.svg') ||
-              url.pathname.endsWith('.gif') ||
-              url.pathname.endsWith('.webp') ||
-              url.pathname.endsWith('.woff') ||
-              url.pathname.endsWith('.woff2') ||
-              url.pathname.endsWith('.ttf')
-            ) {
-              caches.open(DYNAMIC_CACHE).then((cache) => {
-                cache.put(request, responseToCache);
-              });
+            if (shouldCache(url.pathname)) {
+              caches.open(DYNAMIC_CACHE)
+                .then((cache) => cache.put(request, responseToCache))
+                .catch((error) => console.error('[Service Worker] Cache put error:', error));
             }
 
             return networkResponse;
