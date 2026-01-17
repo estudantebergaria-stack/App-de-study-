@@ -41,8 +41,8 @@ const DEFAULT_TIMER_SESSION = {
   subject: '',
   topic: '',
   sessionCorrect: '',
-  sessionIncorrect: '',
-  lastTick: Date.now()
+  sessionIncorrect: ''
+  // Note: lastTick is intentionally omitted here and set dynamically
 };
 
 const INITIAL_STATE: AppState = {
@@ -127,11 +127,12 @@ const App: React.FC = () => {
             const elapsedSeconds = Math.floor((now - savedSession.lastTick) / 1000);
             
             // Calculate new time values based on elapsed time while app was closed
-            let newPomoTimeLeft = savedSession.pomoTimeLeft || DEFAULT_TIMER_SESSION.pomoTimeLeft;
-            let newStopwatchTimeLeft = savedSession.stopwatchTimeLeft || DEFAULT_TIMER_SESSION.stopwatchTimeLeft;
-            let newPomoActive = savedSession.pomoActive || DEFAULT_TIMER_SESSION.pomoActive;
-            let newStopwatchActive = savedSession.stopwatchActive || DEFAULT_TIMER_SESSION.stopwatchActive;
-            let newPomoState = savedSession.pomoState || DEFAULT_TIMER_SESSION.pomoState;
+            // Use nullish coalescing (??) to handle 0 and false values correctly
+            let newPomoTimeLeft = savedSession.pomoTimeLeft ?? DEFAULT_TIMER_SESSION.pomoTimeLeft;
+            let newStopwatchTimeLeft = savedSession.stopwatchTimeLeft ?? DEFAULT_TIMER_SESSION.stopwatchTimeLeft;
+            let newPomoActive = savedSession.pomoActive ?? DEFAULT_TIMER_SESSION.pomoActive;
+            let newStopwatchActive = savedSession.stopwatchActive ?? DEFAULT_TIMER_SESSION.stopwatchActive;
+            let newPomoState = savedSession.pomoState ?? DEFAULT_TIMER_SESSION.pomoState;
             
             // Ensure mutual exclusivity: only one timer can be active at a time
             if (savedSession.pomoActive && savedSession.stopwatchActive) {
@@ -155,18 +156,18 @@ const App: React.FC = () => {
             }
             
             setTimerSessionState({
-              mode: savedSession.mode || DEFAULT_TIMER_SESSION.mode,
-              pomoPreset: savedSession.pomoPreset || DEFAULT_TIMER_SESSION.pomoPreset,
-              breakPreset: savedSession.breakPreset || DEFAULT_TIMER_SESSION.breakPreset,
+              mode: savedSession.mode ?? DEFAULT_TIMER_SESSION.mode,
+              pomoPreset: savedSession.pomoPreset ?? DEFAULT_TIMER_SESSION.pomoPreset,
+              breakPreset: savedSession.breakPreset ?? DEFAULT_TIMER_SESSION.breakPreset,
               pomoActive: newPomoActive,
               pomoTimeLeft: newPomoTimeLeft,
               pomoState: newPomoState,
               stopwatchActive: newStopwatchActive,
               stopwatchTimeLeft: newStopwatchTimeLeft,
-              subject: savedSession.subject || DEFAULT_TIMER_SESSION.subject,
-              topic: savedSession.topic || DEFAULT_TIMER_SESSION.topic,
-              sessionCorrect: savedSession.sessionCorrect || DEFAULT_TIMER_SESSION.sessionCorrect,
-              sessionIncorrect: savedSession.sessionIncorrect || DEFAULT_TIMER_SESSION.sessionIncorrect,
+              subject: savedSession.subject ?? DEFAULT_TIMER_SESSION.subject,
+              topic: savedSession.topic ?? DEFAULT_TIMER_SESSION.topic,
+              sessionCorrect: savedSession.sessionCorrect ?? DEFAULT_TIMER_SESSION.sessionCorrect,
+              sessionIncorrect: savedSession.sessionIncorrect ?? DEFAULT_TIMER_SESSION.sessionIncorrect,
               lastTick: now // Update lastTick to current time for future calculations
             });
           }
@@ -371,7 +372,10 @@ const App: React.FC = () => {
     }
   }, [appData.logs.length, isDataLoaded, appData.settings.theme, setAppData]);
 
-  const [timerSession, setTimerSessionState] = useState(DEFAULT_TIMER_SESSION);
+  const [timerSession, setTimerSessionState] = useState({
+    ...DEFAULT_TIMER_SESSION,
+    lastTick: Date.now()
+  });
   
   const lastSaveRef = useRef<number>(0);
 
