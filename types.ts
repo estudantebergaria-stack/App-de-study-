@@ -10,6 +10,7 @@ export interface StudyLog {
   topic?: string;
   duration: number; // in seconds
   type: 'Pomodoro' | 'Cronômetro';
+  xpEarned?: number; // XP earned from this session
 }
 
 export interface QuestionLog {
@@ -35,6 +36,8 @@ export interface UserSettings {
   isEpicMode?: boolean;
   reviewSessionLimit?: number; // Maximum number of topics to review per session
   isVacationMode?: boolean; // When true, pause all review scheduling
+  xp?: number; // Total XP earned
+  level?: number; // Current level (1-based)
 }
 
 export interface ReviewState {

@@ -16,19 +16,34 @@ const THEME_BACKGROUNDS: Record<string, string> = {
   'mestre': 'linear-gradient(135deg, #1c1c1c 0%, #2d2d2d 50%, #1a1a1a 100%)'
 };
 
+// Theme-color for mobile browsers (always dark for consistency)
+const THEME_COLOR_DARK = '#09090b';
+
 /**
  * Component that dynamically updates the theme-color meta tag
- * and html/body background colors based on the current theme setting
+ * and html/body background colors based on the current theme setting.
+ * 
+ * Ensures consistent dark browser bars on mobile across all themes:
+ * - Android/Chrome: Uses theme-color meta tag
+ * - iOS Safari: Uses apple-mobile-web-app-status-bar-style
+ * - PWA Manifest: theme_color property
  */
 const ThemeColorUpdater: React.FC<ThemeColorUpdaterProps> = ({ theme }) => {
   useEffect(() => {
-    // Get the meta tag
+    // Update theme-color meta tag for Android/Chrome
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-    
     if (metaThemeColor) {
-      // Always use dark color for the browser/system bar regardless of theme
-      metaThemeColor.setAttribute('content', '#09090b');
+      metaThemeColor.setAttribute('content', THEME_COLOR_DARK);
     }
+
+    // Ensure Apple status bar style is set to black-translucent
+    let appleStatusBar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+    if (!appleStatusBar) {
+      appleStatusBar = document.createElement('meta');
+      appleStatusBar.setAttribute('name', 'apple-mobile-web-app-status-bar-style');
+      document.head.appendChild(appleStatusBar);
+    }
+    appleStatusBar.setAttribute('content', 'black-translucent');
 
     // Update html and body background colors
     const htmlElement = document.documentElement;
