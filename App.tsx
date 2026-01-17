@@ -21,6 +21,7 @@ import ThemeColorUpdater from './components/ThemeColorUpdater';
 import Toast, { ToastType } from './components/Toast';
 import ErrorBoundary from './components/ErrorBoundary';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { APP_KEYBOARD_SHORTCUTS } from './constants/keyboardShortcuts';
 import { TRANSLATIONS } from './translations';
 import { ACHIEVEMENTS } from './constants/achievements';
 import { getData, saveData } from './services/db';
@@ -82,33 +83,25 @@ const App: React.FC = () => {
     setToastType(type);
   }, []);
 
-  // Keyboard shortcuts
-  useKeyboardShortcuts([
-    {
-      key: 'd',
+  // Keyboard shortcuts - using shared constant
+  useKeyboardShortcuts(
+    APP_KEYBOARD_SHORTCUTS.map(shortcut => ({
+      key: shortcut.keys,
       ctrl: true,
-      description: 'Go to Dashboard',
-      callback: () => setActiveTab('dashboard')
-    },
-    {
-      key: 'f',
-      ctrl: true,
-      description: 'Go to Focus Timer',
-      callback: () => setActiveTab('focus')
-    },
-    {
-      key: 's',
-      ctrl: true,
-      description: 'Go to Statistics',
-      callback: () => setActiveTab('stats')
-    },
-    {
-      key: 'r',
-      ctrl: true,
-      description: 'Go to Review',
-      callback: () => setActiveTab('revisar')
-    }
-  ], isDataLoaded);
+      description: shortcut.description,
+      callback: () => {
+        const tabMap: Record<string, Tab> = {
+          'd': 'dashboard',
+          'f': 'focus',
+          's': 'stats',
+          'r': 'revisar'
+        };
+        const tab = tabMap[shortcut.keys];
+        if (tab) setActiveTab(tab);
+      }
+    })),
+    isDataLoaded
+  );
 
   useEffect(() => {
     const interval = setInterval(() => {

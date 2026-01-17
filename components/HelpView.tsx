@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { HelpCircle, ChevronDown, ChevronUp, BookOpen, ShieldCheck, Zap, Database, Keyboard } from 'lucide-react';
+import { APP_KEYBOARD_SHORTCUTS } from '../constants/keyboardShortcuts';
 
 interface HelpViewProps {
   theme: 'dark' | 'light';
@@ -12,14 +13,6 @@ const HelpView: React.FC<HelpViewProps> = ({ theme, t }) => {
   const [openIndex, setOpenIndex] = useState<number | null>(4); // Deixa o item do Streak aberto como no print
 
   const faqs = t.faqs || [];
-
-  // Keyboard shortcuts info
-  const keyboardShortcuts = [
-    { keys: 'Ctrl + D', description: 'Go to Dashboard', action: 'Navegar para o Dashboard' },
-    { keys: 'Ctrl + F', description: 'Go to Focus Timer', action: 'Abrir Temporizador de Foco' },
-    { keys: 'Ctrl + S', description: 'Go to Statistics', action: 'Ver Estatísticas' },
-    { keys: 'Ctrl + R', description: 'Go to Review', action: 'Ir para Revisões' },
-  ];
 
   return (
     <div className="max-w-4xl mx-auto space-y-10 animate-fade-in pb-20">
@@ -48,7 +41,7 @@ const HelpView: React.FC<HelpViewProps> = ({ theme, t }) => {
           </h2>
         </div>
         <div className="grid gap-3">
-          {keyboardShortcuts.map((shortcut, idx) => (
+          {APP_KEYBOARD_SHORTCUTS.map((shortcut, idx) => (
             <div 
               key={idx} 
               className={`flex items-center justify-between p-4 rounded-xl transition-colors ${
@@ -65,7 +58,7 @@ const HelpView: React.FC<HelpViewProps> = ({ theme, t }) => {
                   ? 'bg-white border border-slate-200 text-slate-700 shadow-sm' 
                   : 'bg-zinc-900 border border-zinc-700 text-zinc-300 shadow-md'
               }`}>
-                {shortcut.keys}
+                {shortcut.keysDisplay}
               </kbd>
             </div>
           ))}
