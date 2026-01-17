@@ -49,16 +49,18 @@ const ThemeColorUpdater: React.FC<ThemeColorUpdaterProps> = ({ theme }) => {
     const background = THEME_BACKGROUNDS[theme] || THEME_BACKGROUNDS['dark'];
 
     // Check if it's a gradient or solid color
-    if (background.startsWith('linear-gradient')) {
+    const isGradient = background.includes('gradient(');
+    
+    if (isGradient) {
       htmlElement.style.background = background;
-      htmlElement.style.backgroundColor = ''; // Clear background-color when using gradient
+      htmlElement.style.removeProperty('background-color');
       bodyElement.style.background = background;
-      bodyElement.style.backgroundColor = ''; // Clear background-color when using gradient
+      bodyElement.style.removeProperty('background-color');
     } else {
       htmlElement.style.backgroundColor = background;
-      htmlElement.style.background = ''; // Clear background when using solid color
+      htmlElement.style.removeProperty('background');
       bodyElement.style.backgroundColor = background;
-      bodyElement.style.background = ''; // Clear background when using solid color
+      bodyElement.style.removeProperty('background');
     }
   }, [theme]);
 
