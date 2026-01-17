@@ -28,6 +28,23 @@ const END_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2869/2869-pre
 const BREAK_START_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3';
 const BREAK_END_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2020/2020-preview.mp3';
 
+// Timer session default values
+const DEFAULT_TIMER_SESSION = {
+  mode: 'pomodoro' as TimerMode,
+  pomoPreset: 50,
+  breakPreset: 10,
+  pomoActive: false,
+  pomoTimeLeft: 50 * 60,
+  pomoState: 'work' as PomoState,
+  stopwatchActive: false,
+  stopwatchTimeLeft: 0,
+  subject: '',
+  topic: '',
+  sessionCorrect: '',
+  sessionIncorrect: '',
+  lastTick: Date.now()
+};
+
 const INITIAL_STATE: AppState = {
   subjects: ['Matemática', 'Programação', 'Inglês'],
   subjectColors: { 'Matemática': '#6366f1', 'Programação': '#10b981', 'Inglês': '#f43f5e' },
@@ -110,14 +127,20 @@ const App: React.FC = () => {
             const elapsedSeconds = Math.floor((now - savedSession.lastTick) / 1000);
             
             // Calculate new time values based on elapsed time while app was closed
-            let newPomoTimeLeft = savedSession.pomoTimeLeft || 50 * 60;
-            let newStopwatchTimeLeft = savedSession.stopwatchTimeLeft || 0;
-            let newPomoActive = savedSession.pomoActive || false;
-            let newStopwatchActive = savedSession.stopwatchActive || false;
-            let newPomoState = savedSession.pomoState || 'work';
+            let newPomoTimeLeft = savedSession.pomoTimeLeft || DEFAULT_TIMER_SESSION.pomoTimeLeft;
+            let newStopwatchTimeLeft = savedSession.stopwatchTimeLeft || DEFAULT_TIMER_SESSION.stopwatchTimeLeft;
+            let newPomoActive = savedSession.pomoActive || DEFAULT_TIMER_SESSION.pomoActive;
+            let newStopwatchActive = savedSession.stopwatchActive || DEFAULT_TIMER_SESSION.stopwatchActive;
+            let newPomoState = savedSession.pomoState || DEFAULT_TIMER_SESSION.pomoState;
+            
+            // Ensure mutual exclusivity: only one timer can be active at a time
+            if (savedSession.pomoActive && savedSession.stopwatchActive) {
+              // If both were somehow active (shouldn't happen), prioritize Pomodoro
+              newStopwatchActive = false;
+            }
             
             // If timer was active when app was closed, calculate elapsed time
-            if (savedSession.pomoActive) {
+            if (newPomoActive) {
               // Pomodoro mode: subtract elapsed time from timer
               newPomoTimeLeft = Math.max(0, savedSession.pomoTimeLeft - elapsedSeconds);
               // If time ran out while app was closed, stop the timer
@@ -126,24 +149,24 @@ const App: React.FC = () => {
                 // Note: We don't auto-transition between work/break when app was closed
                 // User will need to manually start the next phase
               }
-            } else if (savedSession.stopwatchActive) {
-              // Stopwatch mode: add elapsed time
+            } else if (newStopwatchActive) {
+              // Stopwatch mode: add elapsed time (only if Pomodoro is not active)
               newStopwatchTimeLeft = savedSession.stopwatchTimeLeft + elapsedSeconds;
             }
             
             setTimerSessionState({
-              mode: savedSession.mode || 'pomodoro',
-              pomoPreset: savedSession.pomoPreset || 50,
-              breakPreset: savedSession.breakPreset || 10,
+              mode: savedSession.mode || DEFAULT_TIMER_SESSION.mode,
+              pomoPreset: savedSession.pomoPreset || DEFAULT_TIMER_SESSION.pomoPreset,
+              breakPreset: savedSession.breakPreset || DEFAULT_TIMER_SESSION.breakPreset,
               pomoActive: newPomoActive,
               pomoTimeLeft: newPomoTimeLeft,
               pomoState: newPomoState,
               stopwatchActive: newStopwatchActive,
               stopwatchTimeLeft: newStopwatchTimeLeft,
-              subject: savedSession.subject || '',
-              topic: savedSession.topic || '',
-              sessionCorrect: savedSession.sessionCorrect || '',
-              sessionIncorrect: savedSession.sessionIncorrect || '',
+              subject: savedSession.subject || DEFAULT_TIMER_SESSION.subject,
+              topic: savedSession.topic || DEFAULT_TIMER_SESSION.topic,
+              sessionCorrect: savedSession.sessionCorrect || DEFAULT_TIMER_SESSION.sessionCorrect,
+              sessionIncorrect: savedSession.sessionIncorrect || DEFAULT_TIMER_SESSION.sessionIncorrect,
               lastTick: now // Update lastTick to current time for future calculations
             });
           }
@@ -348,21 +371,7 @@ const App: React.FC = () => {
     }
   }, [appData.logs.length, isDataLoaded, appData.settings.theme, setAppData]);
 
-  const [timerSession, setTimerSessionState] = useState({
-    mode: 'pomodoro' as TimerMode,
-    pomoPreset: 50,
-    breakPreset: 10,
-    pomoActive: false,
-    pomoTimeLeft: 50 * 60,
-    pomoState: 'work' as PomoState,
-    stopwatchActive: false,
-    stopwatchTimeLeft: 0,
-    subject: '',
-    topic: '',
-    sessionCorrect: '',
-    sessionIncorrect: '',
-    lastTick: Date.now()
-  });
+  const [timerSession, setTimerSessionState] = useState(DEFAULT_TIMER_SESSION);
   
   const lastSaveRef = useRef<number>(0);
 
