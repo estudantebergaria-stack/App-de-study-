@@ -360,3 +360,120 @@ export const generateDailyMissions = (
   
   return missions.slice(0, 3); // Return max 3 missions
 };
+
+/**
+ * XP and Leveling System
+ */
+
+export interface LevelInfo {
+  level: number;
+  name: string;
+  xpRequired: number; // Total XP needed to reach this level
+  xpForNext: number; // XP needed to reach next level
+}
+
+export const LEVEL_NAMES = [
+  'Iniciante',      // 1
+  'Aprendiz',       // 2
+  'Estudante',      // 3
+  'Dedicado',       // 4
+  'Focado',         // 5
+  'Persistente',    // 6
+  'Determinado',    // 7
+  'Comprometido',   // 8
+  'Expert',         // 9
+  'Mestre',         // 10
+  'Lenda',          // 11+
+];
+
+/**
+ * Calculate XP required for a given level
+ * Formula: level^2 * 500 (exponential growth)
+ */
+export const getXPForLevel = (level: number): number => {
+  if (level <= 1) return 0;
+  return Math.floor(Math.pow(level, 2) * 500);
+};
+
+/**
+ * Calculate level from total XP
+ */
+export const calculateLevel = (totalXP: number): number => {
+  let level = 1;
+  while (getXPForLevel(level + 1) <= totalXP) {
+    level++;
+  }
+  return level;
+};
+
+/**
+ * Get level info for current XP
+ */
+export const getLevelInfo = (totalXP: number): LevelInfo => {
+  const level = calculateLevel(totalXP);
+  const currentLevelXP = getXPForLevel(level);
+  const nextLevelXP = getXPForLevel(level + 1);
+  
+  return {
+    level,
+    name: LEVEL_NAMES[Math.min(level - 1, LEVEL_NAMES.length - 1)],
+    xpRequired: currentLevelXP,
+    xpForNext: nextLevelXP - totalXP
+  };
+};
+
+/**
+ * Calculate XP earned from a study session
+ * - Base: 10 XP per minute for study, 15 XP per minute for review
+ * - Streak bonus: up to 2x multiplier for daily streak
+ * - Anti-abuse: Diminishing returns after 90 continuous minutes
+ */
+export const calculateSessionXP = (
+  durationSeconds: number,
+  isReview: boolean,
+  currentStreak: number,
+  continuousMinutes: number = 0
+): number => {
+  const minutes = durationSeconds / 60;
+  
+  // Base XP rate
+  const baseRate = isReview ? 15 : 10; // Review gives more XP
+  
+  // Streak multiplier (1.0 to 2.0 based on streak)
+  // Caps at 30 days for 2x
+  const streakMultiplier = 1 + Math.min(currentStreak / 30, 1.0);
+  
+  // Diminishing returns for marathon sessions
+  let effectiveMinutes = minutes;
+  if (continuousMinutes > 90) {
+    const excessMinutes = continuousMinutes - 90;
+    const penaltyFactor = Math.max(0.3, 1 - (excessMinutes / 180)); // Down to 30% after 180 additional minutes
+    effectiveMinutes = 90 + (minutes - Math.max(0, minutes - excessMinutes)) * penaltyFactor;
+  }
+  
+  const xp = Math.floor(effectiveMinutes * baseRate * streakMultiplier);
+  return Math.max(0, xp);
+};
+
+/**
+ * Check if a mission is completed
+ */
+export const isMissionCompleted = (
+  mission: DailyMission,
+  logs: StudyLog[]
+): boolean => {
+  const today = getTodayISO();
+  const todayLogs = logs.filter(l => toLocalISO(new Date(l.date)) === today);
+  
+  if (mission.type === 'complete_goal') {
+    const todayMinutes = todayLogs.reduce((acc, l) => acc + l.duration, 0) / 60;
+    return todayMinutes >= mission.targetMinutes;
+  } else if (mission.subject) {
+    const subjectMinutes = todayLogs
+      .filter(l => l.subject === mission.subject)
+      .reduce((acc, l) => acc + l.duration, 0) / 60;
+    return subjectMinutes >= mission.targetMinutes;
+  }
+  
+  return false;
+};

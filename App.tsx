@@ -21,7 +21,7 @@ import ThemeColorUpdater from './components/ThemeColorUpdater';
 import { TRANSLATIONS } from './translations';
 import { ACHIEVEMENTS } from './constants/achievements';
 import { getData, saveData } from './services/db';
-import { getTodayISO, createTopicKey, getBaseInterval, getDifficultyMultiplier, calculateStreak } from './utils';
+import { getTodayISO, toLocalISO, createTopicKey, getBaseInterval, getDifficultyMultiplier, calculateStreak, calculateSessionXP, calculateLevel } from './utils';
 
 const DEFAULT_COLORS = ['#6366f1', '#10b981', '#f43f5e', '#f59e0b', '#0ea5e9', '#8b5cf6', '#f97316', '#84cc16', '#ec4899', '#64748b'];
 const START_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3';
@@ -59,7 +59,7 @@ const INITIAL_STATE: AppState = {
   unlockedAchievements: [],
   viewedAchievements: [],
   selectedAchievementId: undefined,
-  settings: { theme: 'dark', username: '', language: 'pt-BR', isTestMode: false, isEpicMode: false },
+  settings: { theme: 'dark', username: '', language: 'pt-BR', isTestMode: false, isEpicMode: false, xp: 0, level: 1 },
   examEvents: []
 };
 
@@ -656,10 +656,37 @@ const App: React.FC = () => {
   }, [setTimerSession]);
 
   const addLog = useCallback((log: Omit<StudyLog, 'id'>) => {
-    setAppData(prev => ({
-      ...prev,
-      logs: [...prev.logs, { ...log, id: Date.now() }]
-    }));
+    setAppData(prev => {
+      // Calculate XP for this session
+      const currentStreak = calculateStreak(prev.logs);
+      const isReview = log.topic && log.topic.trim() !== '';
+      
+      // Get total study time today for anti-abuse check
+      const today = getTodayISO();
+      const todayLogs = prev.logs.filter(l => toLocalISO(new Date(l.date)) === today);
+      const continuousMinutes = todayLogs.reduce((acc, l) => acc + l.duration, 0) / 60;
+      
+      const xpEarned = calculateSessionXP(
+        log.duration,
+        isReview,
+        currentStreak,
+        continuousMinutes
+      );
+      
+      // Update total XP and level
+      const newTotalXP = (prev.settings.xp || 0) + xpEarned;
+      const newLevel = calculateLevel(newTotalXP);
+      
+      return {
+        ...prev,
+        logs: [...prev.logs, { ...log, id: Date.now(), xpEarned }],
+        settings: {
+          ...prev.settings,
+          xp: newTotalXP,
+          level: newLevel
+        }
+      };
+    });
   }, [setAppData]);
 
   const saveTimerSession = useCallback(() => {
@@ -967,6 +994,7 @@ const App: React.FC = () => {
               theme={appData.settings.theme} 
               t={t}
               goals={appData.goals}
+              totalXP={appData.settings.xp || 0}
               onStartSession={(subject, minutes) => {
                 // Switch to focus tab and set up timer
                 setActiveTab('focus');

@@ -6,6 +6,9 @@ import { formatTime, formatTimeShort, getTodayISO, toLocalISO, calculateStreak, 
 import NextBestActionCard from './NextBestActionCard';
 import SubjectDiagnostics from './SubjectDiagnostics';
 import WeeklyHeatmap from './WeeklyHeatmap';
+import XPProgressCard from './XPProgressCard';
+import DailyMissionsCard from './DailyMissionsCard';
+import StreakReminderCard from './StreakReminderCard';
 
 interface DashboardProps {
   logs: StudyLog[];
@@ -16,6 +19,7 @@ interface DashboardProps {
   t: any;
   goals?: Record<string, number>;
   onStartSession?: (subject: string, minutes: number) => void;
+  totalXP?: number;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ 
@@ -26,7 +30,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   theme = 'dark', 
   t,
   goals = {},
-  onStartSession 
+  onStartSession,
+  totalXP = 0
 }) => {
   const today = getTodayISO();
   const logsToday = logs.filter(l => toLocalISO(new Date(l.date)) === today);
@@ -91,6 +96,16 @@ const Dashboard: React.FC<DashboardProps> = ({
     handleStartSession(subject, minutes);
   };
 
+  const handleQuickStudy = () => {
+    // Start a 15-minute session with first subject or empty if no subjects
+    const subject = subjects[0] || '';
+    handleStartSession(subject, 15);
+  };
+
+  const handleMissionStart = (mission: any) => {
+    handleStartSession(mission.subject, mission.targetMinutes);
+  };
+
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Header Section */}
@@ -138,6 +153,34 @@ const Dashboard: React.FC<DashboardProps> = ({
         <WeeklyHeatmap
           weekData={weekHeatmapData}
           dailyGoal={30}
+          theme={theme}
+          t={t}
+        />
+      </div>
+
+      {/* Streak Reminder */}
+      <StreakReminderCard
+        currentStreak={currentStreak}
+        hasStudiedToday={logsToday.length > 0}
+        onQuickStudy={handleQuickStudy}
+        theme={theme}
+        t={t}
+      />
+
+      {/* Gamification - Week 2 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* XP Progress */}
+        <XPProgressCard
+          totalXP={totalXP}
+          theme={theme}
+          t={t}
+        />
+
+        {/* Daily Missions */}
+        <DailyMissionsCard
+          missions={dailyMissions}
+          logs={logs}
+          onStartMission={handleMissionStart}
           theme={theme}
           t={t}
         />
