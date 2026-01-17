@@ -1,13 +1,13 @@
 
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" style="height: 100%; background-color: #09090b;">
   <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Focus - Estudo & Produtividade</title>
     
     <!-- PWA Primary Meta Tags -->
-    <meta name="theme-color" content="#6366f1" />
+    <meta name="theme-color" content="#09090b" id="theme-color-meta" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Focus" />
@@ -17,12 +17,22 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      
       body {
         font-family: 'Inter', sans-serif;
         background-color: #09090b;
         color: #f4f4f5;
-        margin: 0;
         transition: background 0.7s ease, color 0.7s ease;
+      }
+      
+      #root {
+        min-height: 100vh;
+        min-height: 100dvh; /* Use dynamic viewport height for better mobile support */
       }
       /* Custom Scrollbar for Dark Mode */
       .custom-scrollbar::-webkit-scrollbar {
@@ -45,6 +55,9 @@
         background-color: #f4f4f5 !important;
         color: #18181b !important;
       }
+      html:has(.light-theme) {
+        background-color: #f4f4f5 !important;
+      }
       .light-theme .custom-scrollbar::-webkit-scrollbar-thumb {
         background: #d4d4d8;
       }
@@ -57,6 +70,9 @@
         background: linear-gradient(135deg, #1a0a2e 0%, #16213e 50%, #0f3460 100%) !important;
         color: #f0f0f0 !important;
       }
+      html:has(.preset-neon-purple) {
+        background: linear-gradient(135deg, #1a0a2e 0%, #16213e 50%, #0f3460 100%) !important;
+      }
       .preset-neon-purple .custom-scrollbar::-webkit-scrollbar-thumb {
         background: #a855f7;
       }
@@ -67,6 +83,9 @@
       .preset-neon-blue {
         background: linear-gradient(135deg, #0a192f 0%, #112240 50%, #1d3557 100%) !important;
         color: #e0f2fe !important;
+      }
+      html:has(.preset-neon-blue) {
+        background: linear-gradient(135deg, #0a192f 0%, #112240 50%, #1d3557 100%) !important;
       }
       .preset-neon-blue .custom-scrollbar::-webkit-scrollbar-thumb {
         background: #0ea5e9;
@@ -79,6 +98,9 @@
         background: linear-gradient(135deg, #0a2e1a 0%, #0f3d25 50%, #1a5a3a 100%) !important;
         color: #d1fae5 !important;
       }
+      html:has(.preset-neon-green) {
+        background: linear-gradient(135deg, #0a2e1a 0%, #0f3d25 50%, #1a5a3a 100%) !important;
+      }
       .preset-neon-green .custom-scrollbar::-webkit-scrollbar-thumb {
         background: #10b981;
       }
@@ -89,6 +111,9 @@
       .preset-neon-pink {
         background: linear-gradient(135deg, #2e0a1e 0%, #3d1025 50%, #5a1a3a 100%) !important;
         color: #fce7f3 !important;
+      }
+      html:has(.preset-neon-pink) {
+        background: linear-gradient(135deg, #2e0a1e 0%, #3d1025 50%, #5a1a3a 100%) !important;
       }
       .preset-neon-pink .custom-scrollbar::-webkit-scrollbar-thumb {
         background: #ec4899;
@@ -102,6 +127,9 @@
         background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #0a0a0a 100%) !important;
         color: #ffd700 !important;
       }
+      html:has(.preset-elite) {
+        background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #0a0a0a 100%) !important;
+      }
       .preset-elite .custom-scrollbar::-webkit-scrollbar-thumb {
         background: #d4af37;
       }
@@ -113,6 +141,9 @@
       .preset-mestre {
         background: linear-gradient(135deg, #1c1c1c 0%, #2d2d2d 50%, #1a1a1a 100%) !important;
         color: #ff4444 !important;
+      }
+      html:has(.preset-mestre) {
+        background: linear-gradient(135deg, #1c1c1c 0%, #2d2d2d 50%, #1a1a1a 100%) !important;
       }
       .preset-mestre .custom-scrollbar::-webkit-scrollbar-thumb {
         background: #cc0000;
@@ -307,6 +338,15 @@
       }
       .preset-mestre .theme-logo-bg {
         background-color: #ff4444 !important;
+      }
+      
+      /* Safe area support for devices with notches */
+      .safe-area-inset-bottom {
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+      
+      .safe-area-bottom {
+        padding-bottom: max(1rem, env(safe-area-inset-bottom));
       }
     </style>
   <script type="importmap">
