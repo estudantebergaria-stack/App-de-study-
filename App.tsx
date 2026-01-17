@@ -41,7 +41,7 @@ const DEFAULT_TIMER_SESSION = {
   subject: '',
   topic: '',
   sessionCorrect: '',
-  sessionIncorrect: ''
+  sessionIncorrect: '',
   // Note: lastTick is intentionally omitted here and set dynamically
 };
 
