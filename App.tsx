@@ -17,6 +17,7 @@ import HelpView from './components/HelpView';
 import ExamsView from './components/ExamsView';
 import ManageSubjectsView from './components/ManageSubjectsView';
 import ReviewView from './components/ReviewView';
+import ThemeColorUpdater from './components/ThemeColorUpdater';
 import { TRANSLATIONS } from './translations';
 import { ACHIEVEMENTS } from './constants/achievements';
 import { getData, saveData } from './services/db';
@@ -931,6 +932,9 @@ const App: React.FC = () => {
 
   return (
     <div className={`flex h-screen overflow-hidden transition-all duration-700 ${appData.settings.theme === 'light' ? 'bg-[#f4f4f5] text-zinc-900' : 'bg-[#09090b] text-[#f4f4f5]'}`}>
+      {/* Dynamic theme-color meta tag updater */}
+      <ThemeColorUpdater theme={appData.settings.theme} />
+      
       <div className={`md:hidden fixed top-0 left-0 right-0 h-16 border-b z-50 flex items-center justify-between px-6 transition-colors ${appData.settings.theme === 'light' ? 'bg-white border-zinc-200' : 'bg-[#09090b] border-zinc-800'}`}>
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 theme-logo-bg rounded-lg flex items-center justify-center text-white font-bold">F</div>
