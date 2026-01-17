@@ -144,14 +144,15 @@ const App: React.FC = () => {
             if (newPomoActive) {
               // Pomodoro mode: subtract elapsed time from timer
               newPomoTimeLeft = Math.max(0, savedSession.pomoTimeLeft - elapsedSeconds);
-              // If time ran out while app was closed, stop the timer
-              if (newPomoTimeLeft === 0) {
+              // If time ran out while app was closed (was running but now is 0), stop the timer
+              if (savedSession.pomoTimeLeft > 0 && newPomoTimeLeft === 0) {
                 newPomoActive = false;
                 // Note: We don't auto-transition between work/break when app was closed
                 // User will need to manually start the next phase
               }
             } else if (newStopwatchActive) {
-              // Stopwatch mode: add elapsed time (only if Pomodoro is not active)
+              // Stopwatch mode: add elapsed time
+              // (mutual exclusivity already enforced above)
               newStopwatchTimeLeft = savedSession.stopwatchTimeLeft + elapsedSeconds;
             }
             
