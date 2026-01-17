@@ -934,7 +934,7 @@ const App: React.FC = () => {
       <div className={`md:hidden fixed top-0 left-0 right-0 h-16 border-b z-50 flex items-center justify-between px-6 transition-colors ${appData.settings.theme === 'light' ? 'bg-white border-zinc-200' : 'bg-[#09090b] border-zinc-800'}`}>
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 theme-logo-bg rounded-lg flex items-center justify-center text-white font-bold">F</div>
-          <span className={`font-bold theme-text-primary`}>Focus</span>
+          <span className="font-bold theme-text-primary">Focus</span>
         </div>
         <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className={`p-2 transition-colors ${appData.settings.theme === 'light' ? 'text-zinc-400' : 'text-zinc-500'}`}>
           {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
