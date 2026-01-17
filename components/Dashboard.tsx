@@ -9,6 +9,7 @@ import WeeklyHeatmap from './WeeklyHeatmap';
 import XPProgressCard from './XPProgressCard';
 import DailyMissionsCard from './DailyMissionsCard';
 import StreakReminderCard from './StreakReminderCard';
+import WeeklySummary from './WeeklySummary';
 
 interface DashboardProps {
   logs: StudyLog[];
@@ -185,6 +186,16 @@ const Dashboard: React.FC<DashboardProps> = ({
           t={t}
         />
       </div>
+
+      {/* Weekly Summary - Week 3 */}
+      <WeeklySummary
+        subjects={subjects}
+        logs={logs}
+        goals={goals}
+        theme={theme}
+        t={t}
+        onActionClick={handleDiagnosticAction}
+      />
 
       {/* Subject Diagnostics */}
       {subjects.length > 0 && (
