@@ -61,8 +61,10 @@ export const getShortcutDisplay = (shortcut: KeyboardShortcut): string => {
   
   if (shortcut.ctrl) {
     // Use Cmd symbol on Mac, Ctrl elsewhere
-    // Check userAgent as navigator.platform is deprecated
-    const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
+    // Prefer userAgentData when available, fallback to userAgent regex
+    const isMac = 
+      (navigator.userAgentData?.platform && navigator.userAgentData.platform.toLowerCase().includes('mac')) ||
+      /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
     parts.push(isMac ? '⌘' : 'Ctrl');
   }
   if (shortcut.shift) parts.push('Shift');

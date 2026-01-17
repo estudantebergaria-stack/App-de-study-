@@ -31,8 +31,8 @@ export const APP_KEYBOARD_SHORTCUTS: AppKeyboardShortcut[] = [
     action: 'Ver Estatísticas'
   },
   {
-    keys: 'r',
-    keysDisplay: 'Ctrl + R',
+    keys: 'e',
+    keysDisplay: 'Ctrl + E',
     description: 'Go to Review',
     action: 'Ir para Revisões'
   }

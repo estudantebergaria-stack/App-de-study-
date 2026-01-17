@@ -94,7 +94,7 @@ const App: React.FC = () => {
           'd': 'dashboard',
           'f': 'focus',
           's': 'stats',
-          'r': 'revisar'
+          'e': 'revisar'  // Changed from 'r' to 'e' to avoid conflict with browser refresh
         };
         const tab = tabMap[shortcut.keys];
         if (tab) setActiveTab(tab);

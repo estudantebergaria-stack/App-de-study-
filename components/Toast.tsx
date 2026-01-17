@@ -26,12 +26,13 @@ const Toast: React.FC<ToastProps> = ({
     onCloseRef.current = onClose;
   }, [onClose]);
 
+  // Reset timer when message changes
   useEffect(() => {
     const timer = setTimeout(() => {
       onCloseRef.current();
     }, duration);
     return () => clearTimeout(timer);
-  }, [duration]);
+  }, [duration, message]); // Added message to dependencies to reset timer on message change
 
   const icons = {
     success: CheckCircle,
