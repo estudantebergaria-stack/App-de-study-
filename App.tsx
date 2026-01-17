@@ -931,12 +931,12 @@ const App: React.FC = () => {
 
   return (
     <div className={`flex h-screen overflow-hidden transition-all duration-700 ${appData.settings.theme === 'light' ? 'bg-[#f4f4f5] text-zinc-900' : 'bg-[#09090b] text-[#f4f4f5]'}`}>
-      <div className={`md:hidden fixed top-0 left-0 right-0 h-16 border-b z-50 flex items-center justify-between px-6 transition-colors ${appData.settings.theme === 'light' ? 'bg-white border-zinc-200' : 'bg-zinc-900 border-zinc-800'}`}>
+      <div className={`md:hidden fixed top-0 left-0 right-0 h-16 border-b z-50 flex items-center justify-between px-6 transition-colors ${appData.settings.theme === 'light' ? 'bg-white border-zinc-200' : 'bg-[#09090b] border-zinc-800'}`}>
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">F</div>
-          <span className={`font-bold ${appData.settings.theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Focus</span>
+          <div className="w-8 h-8 theme-logo-bg rounded-lg flex items-center justify-center text-white font-bold">F</div>
+          <span className={`font-bold theme-text-primary`}>Focus</span>
         </div>
-        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 text-zinc-400">
+        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className={`p-2 transition-colors ${appData.settings.theme === 'light' ? 'text-zinc-400' : 'text-zinc-500'}`}>
           {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
