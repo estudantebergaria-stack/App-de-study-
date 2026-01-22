@@ -158,7 +158,7 @@ const ReviewView: React.FC<ReviewViewProps> = ({ reviewStates, theme = 'dark', t
             </span>
           </div>
           <div className={`text-3xl font-black theme-text-primary transition-all duration-500`}>
-            {dueTopics.filter(t => t.daysOverdue === 0).length}
+            {dueTopics.filter(t => t.daysOverdue >= 0).length}
           </div>
         </div>
         
