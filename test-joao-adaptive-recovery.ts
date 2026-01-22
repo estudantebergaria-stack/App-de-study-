@@ -136,7 +136,7 @@ console.log('  • Tentativa 2+: 1 dia (mínimo intensivo)');
 console.log();
 
 console.log('✅ CRITÉRIOS DE RECUPERAÇÃO:');
-console.log('  • Sessão com ≥ 70% de acerto');
+console.log('  • Sessão com ≥ 65% de acerto');
 console.log('  • Restaura intervalo anterior (ex: 125 dias)');
 console.log('  • Avança review count normalmente');
 console.log();
@@ -147,9 +147,10 @@ console.log('  • Aumenta tentativas de recuperação');
 console.log('  • Reduz intervalo (3d → 2d → 1d)');
 console.log();
 
-console.log('🟡 PERFORMANCE MARGINAL (50-70%):');
-console.log('  • Mantém em recuperação sem piorar');
-console.log('  • Dá mais chances sem apertar intervalo');
+console.log('🟡 PERFORMANCE MARGINAL (50-65%):');
+console.log('  • Mantém em recuperação');
+console.log('  • Incrementa tentativas de recuperação');
+console.log('  • Dá chances para melhorar');
 console.log();
 
 console.log('💡 BENEFÍCIOS DO SISTEMA:');

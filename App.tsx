@@ -470,27 +470,36 @@ const App: React.FC = () => {
         newReviewCount = currentReviewState.reviewCount;
       } else if (inRecoveryMode) {
         // Already in recovery mode, check if recovering or worsening
-        const isRecovering = sessionAccuracy >= 0.7; // Good performance
+        const isRecovering = sessionAccuracy >= 0.65; // Good performance
         const isWorsening = sessionAccuracy < 0.5; // Still struggling
         
         if (isRecovering) {
           // Successfully recovered! Restore previous interval and exit recovery mode
           inRecoveryMode = false;
           recoveryAttempts = 0;
-          // Restore review count and continue normal progression
-          newReviewCount = currentReviewState.reviewCount + 1;
+          // Don't increment review count - it stays the same so interval restoration works
+          newReviewCount = currentReviewState.reviewCount;
         } else if (isWorsening) {
           // Still struggling, increment recovery attempts
           recoveryAttempts = (currentReviewState.recoveryAttempts || 0) + 1;
           newReviewCount = currentReviewState.reviewCount; // Don't advance
         } else {
-          // Marginal performance (50-70%), stay in recovery but don't worsen
-          recoveryAttempts = currentReviewState.recoveryAttempts || 0;
+          // Marginal performance (50-65%), stay in recovery and increment attempts
+          recoveryAttempts = (currentReviewState.recoveryAttempts || 0) + 1;
           newReviewCount = currentReviewState.reviewCount;
         }
       } else {
-        // Normal mode: standard reset logic
-        if (cumulativeAccuracy < 0.4) {
+        // Normal mode: check if should enter recovery or continue normally
+        if (cumulativeAccuracy < 0.4 && currentReviewState.reviewCount >= 3) {
+          // For established topics with low accuracy, enter recovery mode instead of hard reset
+          inRecoveryMode = true;
+          recoveryAttempts = 0;
+          const baseInterval = getBaseInterval(currentReviewState.reviewCount);
+          const difficultyMult = getDifficultyMultiplier(0.4); // Use minimum threshold
+          previousInterval = Math.max(1, Math.min(180, Math.round(baseInterval * difficultyMult)));
+          newReviewCount = currentReviewState.reviewCount; // Don't advance
+        } else if (cumulativeAccuracy < 0.4) {
+          // For new topics, still use hard reset
           newReviewCount = 1;
         } else {
           newReviewCount = currentReviewState.reviewCount + 1;
@@ -510,8 +519,13 @@ const App: React.FC = () => {
           intervalDays = 1; // Subsequent attempts: 1 day minimum
         }
       } else if (currentReviewState.inRecoveryMode && !inRecoveryMode) {
-        // Just recovered! Restore previous interval
-        intervalDays = previousInterval || 7; // Fallback to 7 if not saved
+        // Just recovered! Restore previous interval and then increment for next review
+        const restoredInterval = currentReviewState.previousInterval || 7;
+        intervalDays = restoredInterval;
+        // Now that we're out of recovery, increment review count for next time
+        // Note: At line 481 we kept it the same to ensure interval restoration works correctly
+        // Here we increment it so the user progresses after successful recovery
+        newReviewCount = currentReviewState.reviewCount + 1;
       } else {
         // Normal interval calculation
         const baseInterval = getBaseInterval(newReviewCount);
