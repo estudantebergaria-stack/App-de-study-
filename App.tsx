@@ -470,7 +470,7 @@ const App: React.FC = () => {
         newReviewCount = currentReviewState.reviewCount;
       } else if (inRecoveryMode) {
         // Already in recovery mode, check if recovering or worsening
-        const isRecovering = sessionAccuracy >= 0.65; // Good performance
+        const isRecovering = sessionAccuracy >= 0.65 && currentReviewState.reviewCount >= 3; // Good performance + established topic
         const isWorsening = sessionAccuracy < 0.5; // Still struggling
         
         if (isRecovering) {
