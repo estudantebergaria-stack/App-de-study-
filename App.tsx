@@ -470,7 +470,7 @@ const App: React.FC = () => {
         newReviewCount = currentReviewState.reviewCount;
       } else if (inRecoveryMode) {
         // Already in recovery mode, check if recovering or worsening
-        const isRecovering = sessionAccuracy >= 0.65 && currentReviewState.reviewCount >= 3; // Good performance + established topic
+        const isRecovering = sessionAccuracy >= 0.65; // Good performance
         const isWorsening = sessionAccuracy < 0.5; // Still struggling
         
         if (isRecovering) {
@@ -523,6 +523,8 @@ const App: React.FC = () => {
         const restoredInterval = currentReviewState.previousInterval || 7;
         intervalDays = restoredInterval;
         // Now that we're out of recovery, increment review count for next time
+        // Note: At line 481 we kept it the same to ensure interval restoration works correctly
+        // Here we increment it so the user progresses after successful recovery
         newReviewCount = currentReviewState.reviewCount + 1;
       } else {
         // Normal interval calculation
