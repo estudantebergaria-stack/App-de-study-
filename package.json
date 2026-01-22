@@ -12,7 +12,8 @@
     "test:joao-future": "npx tsx test-joao-future-reviews.ts",
     "test:joao-reset": "npx tsx test-joao-reset-scenario.ts",
     "test:joao-continue-error": "npx tsx test-joao-continue-error.ts",
-    "test:joao-adaptive": "npx tsx test-joao-adaptive-recovery.ts"
+    "test:joao-adaptive": "npx tsx test-joao-adaptive-recovery.ts",
+    "test:joao-180-days": "npx tsx test-joao-180-days-pattern.ts"
   },
   "dependencies": {
     "lucide-react": "^0.562.0",
