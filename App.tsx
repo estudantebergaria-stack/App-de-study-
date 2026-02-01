@@ -18,6 +18,10 @@ import ExamsView from './components/ExamsView';
 import ManageSubjectsView from './components/ManageSubjectsView';
 import ReviewView from './components/ReviewView';
 import ThemeColorUpdater from './components/ThemeColorUpdater';
+import Toast, { ToastType } from './components/Toast';
+import ErrorBoundary from './components/ErrorBoundary';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { APP_KEYBOARD_SHORTCUTS } from './constants/keyboardShortcuts';
 import { TRANSLATIONS } from './translations';
 import { ACHIEVEMENTS } from './constants/achievements';
 import { getData, saveData } from './services/db';
@@ -69,8 +73,35 @@ const App: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentDate, setCurrentDate] = useState(getTodayISO());
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastType, setToastType] = useState<ToastType>('success');
   
   const [appData, setAppDataState] = useState<AppState>(INITIAL_STATE);
+
+  // Show toast notification with type
+  const showToast = useCallback((message: string, type: ToastType = 'success') => {
+    setToastMessage(message);
+    setToastType(type);
+  }, []);
+
+  // Keyboard shortcuts - using shared constant
+  useKeyboardShortcuts(
+    APP_KEYBOARD_SHORTCUTS.map(shortcut => ({
+      key: shortcut.keys,
+      ctrl: true,
+      description: shortcut.description,
+      callback: () => {
+        const tabMap: Record<string, Tab> = {
+          'd': 'dashboard',
+          'f': 'focus',
+          's': 'stats',
+          'e': 'revisar'  // Changed from 'r' to 'e' to avoid conflict with browser refresh
+        };
+        const tab = tabMap[shortcut.keys];
+        if (tab) setActiveTab(tab);
+      }
+    })),
+    isDataLoaded
+  );
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -216,6 +247,11 @@ const App: React.FC = () => {
   }, [setAppData]);
 
   const generateTestData = useCallback(() => {
+    // Add confirmation dialog
+    if (!confirm("⚠️ Gerar dados de teste?\n\nIsso adicionará 14 dias de histórico simulado para todas as matérias.\n\nDeseja continuar?")) {
+      return;
+    }
+    
     setAppData(prev => {
       const newLogs: StudyLog[] = [];
       const newQuestionLogs: QuestionLog[] = [];
@@ -262,8 +298,8 @@ const App: React.FC = () => {
         questions
       };
     });
-    alert("Histórico de teste gerado com sucesso! Verifique o painel e estatísticas.");
-  }, [setAppData]);
+    showToast("✅ Histórico de teste gerado com sucesso!", 'success');
+  }, [setAppData, showToast]);
 
   const generateAdaptiveRecoveryTestData = useCallback(() => {
     setAppData(prev => {
@@ -946,18 +982,11 @@ const App: React.FC = () => {
       };
     });
     
-    // Show feedback
-    setToastMessage(t.postponeSuccess || 'Review postponed for +1 day');
-    setTimeout(() => setToastMessage(null), 3000);
+    // Show feedback with new toast system
+    showToast(t.postponeSuccess || 'Review postponed for +1 day', 'info');
   };
 
-  // Auto-hide toast
-  useEffect(() => {
-    if (toastMessage) {
-      const timer = setTimeout(() => setToastMessage(null), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [toastMessage]);
+  // Auto-hide toast (removed as Toast component handles this now)
 
   if (!isDataLoaded) {
     return (
@@ -998,7 +1027,8 @@ const App: React.FC = () => {
       />
 
       <main className={`flex-1 overflow-y-auto custom-scrollbar relative pt-16 md:pt-0 transition-all duration-700`}>
-        <div className="p-6 md:p-10 max-w-7xl mx-auto w-full h-full relative z-10">
+        <ErrorBoundary>
+          <div className="p-6 md:p-10 max-w-7xl mx-auto w-full h-full relative z-10">
           {activeTab === 'dashboard' && (
             <Dashboard 
               logs={appData.logs} 
@@ -1097,22 +1127,17 @@ const App: React.FC = () => {
           {activeTab === 'ajuda' && <HelpView theme={appData.settings.theme} t={t} />}
           {activeTab === 'settings' && <Settings settings={appData.settings} onUpdate={(s) => setAppData(prev => ({ ...prev, settings: { ...prev.settings, ...s } }))} theme={appData.settings.theme} appState={appData} onExport={handleExport} onImport={handleImport} onReset={() => setAppData(() => INITIAL_STATE)} onUnlockAll={unlockAllAchievements} onGenerateTestData={generateTestData} onGenerateAdaptiveRecoveryTestData={generateAdaptiveRecoveryTestData} t={t} />}
         </div>
+        </ErrorBoundary>
       </main>
       
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-8 right-8 z-50 animate-fade-in">
-          <div className={`px-6 py-4 rounded-2xl shadow-2xl border-2 ${
-            appData.settings.theme === 'light' 
-              ? 'bg-white border-emerald-200 text-zinc-900' 
-              : 'bg-zinc-900 border-emerald-500/50 text-white'
-          }`}>
-            <div className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="font-bold text-sm">{toastMessage}</span>
-            </div>
-          </div>
-        </div>
+        <Toast
+          message={toastMessage}
+          type={toastType}
+          onClose={() => setToastMessage(null)}
+          theme={appData.settings.theme === 'light' ? 'light' : 'dark'}
+        />
       )}
     </div>
   );
